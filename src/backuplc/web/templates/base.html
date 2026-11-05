@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  {% block head_extra %}{% endblock %}
+  <title>{% block title %}Início{% endblock %} · backup-lc</title>
+  <link rel="stylesheet" href="{{ url_for('static', path='css/app.css') }}?v={{ app_version }}">
+  <link rel="icon" href="data:,">
+</head>
+<body>
+  <a class="skip" href="#main">Pular para o conteúdo</a>
+  <header class="topbar">
+    <div class="wrap topbar__inner">
+      <a class="brand" href="/">
+        <svg class="brand__logo" viewBox="0 0 32 32" aria-hidden="true">
+          <rect x="3" y="6" width="26" height="8" rx="2.5" class="brand__shape"/>
+          <rect x="3" y="18" width="26" height="8" rx="2.5" class="brand__shape brand__shape--alt"/>
+          <circle cx="8.5" cy="10" r="1.6" class="brand__led"/>
+          <circle cx="8.5" cy="22" r="1.6" class="brand__led"/>
+        </svg>
+        <span>backup<strong>-lc</strong></span>
+      </a>
+      <nav aria-label="Principal">
+        <ul class="nav">
+          <li><a href="/"{% if active == 'dashboard' %} aria-current="page"{% endif %}>Dashboard</a></li>
+          <li><span class="nav__soon" title="Disponível na etapa E2">Switches</span></li>
+          <li><span class="nav__soon" title="Disponível na etapa E4">Histórico</span></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+  <main id="main" class="wrap">
+    {% block content %}{% endblock %}
+  </main>
+  <footer class="wrap footer">
+    <span>backup-lc v{{ app_version }}</span>
+    <span>Páginas geradas no servidor</span>
+  </footer>
+</body>
+</html>

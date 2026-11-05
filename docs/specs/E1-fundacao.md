@@ -2,7 +2,7 @@
 
 | Campo | Valor |
 | --- | --- |
-| Status | Rascunho — aguardando aprovação (fase B) |
+| Status | **Concluída** — aprovada em 2026-11-04, entregue em 2026-11-04 (v0.1.0) |
 | Base | PRD v2.0 (N-03 a N-08, R-03, R-05), ADR-001 a ADR-011 |
 | Data | 2026-11-04 |
 
@@ -66,4 +66,26 @@ Após o build, testes e execução não acessam a rede.
 
 ## 7. Evidências de verificação (fase D)
 
-_Preenchido na entrega._
+Verificado em 2026-11-04 no servidor de produção, branch `e1/fundacao`.
+
+| Critério | Resultado | Evidência |
+| --- | --- | --- |
+| E1-01 | Aprovado | `scripts/init.sh` + `docker compose up -d` → container `healthy`; `/health/ready` → `200 {"database":true,"schema":true,"storage":true}`; `GET /` e `HEAD /` → 200 |
+| E1-02 | Aprovado | `check-config` com segredo ausente → saída 2, log `BLC_SESSION_SECRET_FILE: arquivo não encontrado`; testes `test_config.py` (8) confirmam que o valor inválido não aparece |
+| E1-03 | Aprovado | `test_migracao_ida_e_volta`: upgrade → downgrade base → upgrade, esquema idêntico; `test_migrate_e_check_config` pelo CLI |
+| E1-04 | Aprovado | `test_canarios_nao_vazam`: canários ausentes de logs, banco (incluindo WAL) e arquivos; `test_logs_sao_json_e_mascaram_segredos` |
+| E1-05 | Aprovado | `test_frontend.py` (10): nenhum `<script>`, `on*`, `javascript:` ou `style=` nas páginas e templates; nenhum `.js` estático; CSP `script-src 'none'` confirmada também via `curl` |
+| E1-06 | Aprovado | `id` no container → `uid=10001(app)`; `ReadonlyRootfs=true`, `CapDrop=[ALL]`, `no-new-privileges`, 512 MB; `touch /app/x` → `Read-only file system` |
+| E1-07 | Aprovado | `docker port` → `8080/tcp -> 127.0.0.1:8080`; `ss -ltn` → escuta só em `127.0.0.1:8080` |
+| E1-08 | Aprovado | `scripts/check.sh` com `--network none`: Ruff format/check OK, mypy estrito sem erros (19 arquivos), pytest 31 aprovados |
+| E1-09 | Aprovado | Arquivo `core/violacao.py` importando `backuplc.web.app` (passa em Ruff e mypy) → `check.sh` falha: `backuplc/core/violacao.py:1: backuplc.core.violacao não pode importar backuplc.web.app`; arquivo removido em seguida |
+
+**Ajustes feitos durante a verificação:**
+
+- Imagem: código copiado com permissão do checkout (`0700`) impedia o usuário 10001 de ler o pacote; o Dockerfile agora fixa `root:root` e `go=rX` em `/app/src`.
+- `umask 077` no processo: banco e arquivos de dados ficam `0600` (N-08).
+- Logger do Alembic em WARNING (evita log a cada health check); campo `color_message` do uvicorn removido do JSON.
+
+**Uso de rede (G-2, aprovado):** `uv` 0.13.7 e 43 pacotes do PyPI, uma vez, na geração do `uv.lock` e no build. Execução e testes sem rede.
+
+**Pendência técnica registrada:** o Starlette 1.9 emite aviso de depreciação do `httpx` no `TestClient` (sugere `httpx2`). Sem impacto em produção; troca avaliada quando houver nova aprovação G-2.

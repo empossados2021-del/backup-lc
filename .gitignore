@@ -1,0 +1,15 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+.mypy_cache/
+.pytest_cache/
+.ruff_cache/
+
+# Dados e segredos nunca entram no git (R-05; repositório público)
+data/
+secrets/
+.env
+*.db
+*.db-wal
+*.db-shm

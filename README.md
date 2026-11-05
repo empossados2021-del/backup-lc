@@ -2,7 +2,29 @@
 
 Backup automático e diário da configuração de switches, com histórico verificável e dashboard de saúde dos backups.
 
-> Status: **E0 concluída** · **E1 — Fundação** em especificação (nenhum código ainda).
+> Status: **E1 — Fundação e base visual concluída (v0.1.0)** · próxima: E2 — Acesso e cadastro.
+
+## Subir o sistema
+
+```bash
+scripts/init.sh          # como root: diretório de dados e segredos (idempotente)
+docker compose up -d     # build + execução; migrações aplicadas na subida
+```
+
+O dashboard escuta só em `127.0.0.1:8080`. Acesso por túnel: `ssh -L 8080:127.0.0.1:8080 <usuario>@<servidor>`.
+Detalhes em [runbook de instalação](docs/runbooks/instalacao.md).
+
+## Desenvolvimento
+
+| Comando | O que faz | Usa a rede? |
+| --- | --- | --- |
+| `scripts/check.sh` | Ruff, mypy (estrito) e pytest em container `--network none` | Não* |
+| `scripts/fmt.sh` | Formata e corrige o código | Não* |
+| `scripts/lock.sh` | Regenera `uv.lock` | **Sim** (G-2) |
+
+\* O primeiro build da imagem de desenvolvimento baixa os pacotes travados (G-2); depois usa cache.
+
+Estrutura: `src/backuplc/{core,web,migrations}` · testes em `tests/` · decisões em `docs/adr/`.
 
 ## Documentação
 
@@ -10,6 +32,7 @@ Backup automático e diário da configuração de switches, com histórico verif
 - [Plano SDD](docs/PLANO.md) — ciclo de trabalho, etapas e portões de aprovação
 - [Decisões de arquitetura](docs/adr/README.md) — ADR-001 a ADR-011
 - [Spec E1 — Fundação](docs/specs/E1-fundacao.md)
+- [Runbook de instalação](docs/runbooks/instalacao.md)
 - [Changelog](CHANGELOG.md)
 
 ## Regras invioláveis
