@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block title %}{{ title }}{% endblock %}
+{% block content %}
+<section class="card error">
+  <p class="error__code">{{ status }}</p>
+  <h1>{{ title }}</h1>
+  <p class="muted">O endereço solicitado não está disponível.</p>
+  <p><a class="button" href="/">Voltar ao dashboard</a></p>
+</section>
+{% endblock %}

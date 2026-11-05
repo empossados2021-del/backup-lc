@@ -1,0 +1,54 @@
+name: backup-lc
+
+services:
+  app:
+    build:
+      context: .
+      target: runtime
+    image: backuplc:latest
+    restart: unless-stopped
+    command: ["serve"]
+    environment:
+      BLC_DATA_DIR: /data
+      BLC_SESSION_SECRET_FILE: /run/secrets/session_secret
+      BLC_MASTER_KEY_FILE: /run/secrets/master_key
+      BLC_LOG_LEVEL: ${BLC_LOG_LEVEL:-INFO}
+    secrets:
+      - session_secret
+      - master_key
+    volumes:
+      - ${BLC_DATA_HOST:-/var/lib/backup-lc}:/data
+    # ADR-012: publicado em todas as interfaces (G-3 aprovado em 2026-11-04).
+    # Para restringir ao host local: BLC_BIND=127.0.0.1 no .env.
+    ports:
+      - "${BLC_BIND:-0.0.0.0}:${BLC_PORT:-8080}:8080"
+    user: "10001:10001"
+    read_only: true
+    tmpfs:
+      - /tmp
+    cap_drop: [ALL]
+    security_opt:
+      - no-new-privileges:true
+    mem_limit: 512m
+    pids_limit: 128
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8080/health/ready', timeout=3).status == 200 else 1)"
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: "5"
+
+secrets:
+  session_secret:
+    file: ${BLC_SECRETS_DIR:-/etc/backup-lc/secrets}/session_secret
+  master_key:
+    file: ${BLC_SECRETS_DIR:-/etc/backup-lc/secrets}/master_key

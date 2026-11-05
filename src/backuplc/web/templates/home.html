@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+{% block head_extra %}<meta http-equiv="refresh" content="60">{% endblock %}
+{% block title %}Dashboard{% endblock %}
+{% block content %}
+<section class="page-head">
+  <div>
+    <p class="eyebrow">Visão geral</p>
+    <h1>Saúde dos backups</h1>
+    <p class="lead">Nenhum switch cadastrado ainda. Os números abaixo ganham vida a partir da etapa E3.</p>
+  </div>
+  <span class="badge badge--idle">Dashboard em construção</span>
+</section>
+
+<section class="hero-grid" aria-label="Resumo">
+  <article class="card hero">
+    <svg class="gauge" viewBox="0 0 120 120" role="img" aria-label="Percentual de switches saudáveis: sem dados">
+      <circle class="gauge__track" cx="60" cy="60" r="50"/>
+      <text x="60" y="62" class="gauge__value" text-anchor="middle">—</text>
+      <text x="60" y="80" class="gauge__label" text-anchor="middle">saudáveis</text>
+    </svg>
+    <div class="hero__text">
+      <h2>Switches saudáveis</h2>
+      <p class="muted">Percentual de switches ativos com backup válido nas últimas 26 horas.</p>
+    </div>
+  </article>
+
+  <div class="stats">
+    {% for state in states %}
+    <article class="card stat stat--{{ state.key }}">
+      <p class="stat__label"><span class="dot" aria-hidden="true"></span>{{ state.label }}</p>
+      <p class="stat__value">0</p>
+      <p class="stat__hint">{{ state.hint }}</p>
+    </article>
+    {% endfor %}
+  </div>
+</section>
+
+<section class="grid-2">
+  <article class="card">
+    <div class="card__head">
+      <h2>Estado da plataforma</h2>
+      {% if platform_ok %}
+      <span class="badge badge--ok">Operacional</span>
+      {% else %}
+      <span class="badge badge--crit">Com falhas</span>
+      {% endif %}
+    </div>
+    <ul class="checks">
+      {% for check in checks %}
+      <li>
+        <span>{{ check.label }}</span>
+        {% if check.ok %}
+        <span class="badge badge--ok">OK</span>
+        {% else %}
+        <span class="badge badge--crit">Falha</span>
+        {% endif %}
+      </li>
+      {% endfor %}
+    </ul>
+  </article>
+
+  <article class="card">
+    <div class="card__head"><h2>Próximas etapas</h2></div>
+    <ol class="steps">
+      {% for code, text in roadmap %}
+      <li><span class="steps__code">{{ code }}</span><span>{{ text }}</span></li>
+      {% endfor %}
+    </ol>
+  </article>
+</section>
+{% endblock %}
