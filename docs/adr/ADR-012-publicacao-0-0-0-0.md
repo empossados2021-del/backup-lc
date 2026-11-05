@@ -2,7 +2,7 @@
 
 **Status:** Aceita · 2026-11-04 · **Substitui** a ADR-011
 
-**Contexto:** O dono do produto pediu acesso direto ao dashboard pela rede, sem túnel SSH. Pedido tratado como aprovação do portão G-3. Na data, o host não tinha firewall (INPUT com política ACCEPT, sem ufw) e a interface de gerenciamento estava numa rede /16.
+**Contexto:** O dono do produto pediu acesso direto ao dashboard pela rede, sem túnel SSH. Pedido tratado como aprovação do portão G-3. Na data, o host não tinha firewall (INPUT com política ACCEPT, sem ufw) e a interface de gerenciamento estava numa rede ampla.
 
 **Decisão:** O `compose.yaml` publica a porta em `${BLC_BIND:-0.0.0.0}:${BLC_PORT:-8080}`. O valor `BLC_BIND=127.0.0.1` volta ao comportamento da ADR-011 sem alterar o código.
 

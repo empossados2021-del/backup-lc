@@ -1,7 +1,15 @@
 #!/usr/bin/env bash
 # Prepara diretórios e segredos no host. Idempotente: nunca sobrescreve segredos.
-# Uso (como root): scripts/init.sh
+# Uso (como root): scripts/init.sh   — lê o .env do repositório, se existir.
 set -euo pipefail
+cd "$(dirname "$0")/.."
+
+if [ -f .env ]; then
+  set -a
+  # shellcheck disable=SC1091
+  . ./.env
+  set +a
+fi
 
 SECRETS_DIR="${BLC_SECRETS_DIR:-/etc/backup-lc/secrets}"
 DATA_DIR="${BLC_DATA_HOST:-/var/lib/backup-lc}"

@@ -2,6 +2,17 @@
 
 Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/); versões seguem SemVer.
 
+## [Não lançado]
+
+### Adicionado
+- `docs/ESTADO.md` (estado do projeto e próximos passos), `docs/DESENVOLVIMENTO.md` (guia da VM de desenvolvimento) e `CLAUDE.md` (regras para assistentes de IA).
+- ADR-013: desenvolvimento em VM local; produção só recebe versões marcadas.
+
+### Alterado
+- Regras R-01/R-02 do PRD, plano (seção de ambientes e fase F de implantação) e runbook (implantação por tag) refletem a ADR-013.
+- `scripts/init.sh` lê o `.env` do repositório, permitindo caminhos de desenvolvimento.
+- Removido o nome de usuário do servidor dos exemplos da documentação.
+
 ## [0.1.0] — 2026-11-04 — E1 Fundação e base visual
 
 ### Adicionado

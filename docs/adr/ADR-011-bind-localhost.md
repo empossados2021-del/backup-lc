@@ -4,6 +4,6 @@
 
 **Contexto:** Ainda não está definido em que porta e para quais redes o dashboard será publicado, nem o certificado TLS (P-03). Abrir porta na rede tem impacto (R-02).
 
-**Decisão:** O container publica apenas em `127.0.0.1:8080`. Acesso durante o desenvolvimento por túnel SSH (`ssh -L 8080:127.0.0.1:8080 admlc@<servidor>`).
+**Decisão:** O container publica apenas em `127.0.0.1:8080`. Acesso durante o desenvolvimento por túnel SSH (`ssh -L 8080:127.0.0.1:8080 <usuario>@<servidor>`).
 
 **Consequências:** Nenhuma porta nova fica visível na rede. A exposição definitiva, com TLS, entra por nova ADR e aprovação G-3.
