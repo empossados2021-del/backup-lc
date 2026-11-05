@@ -76,7 +76,7 @@ Verificado em 2026-11-04 no servidor de produção, branch `e1/fundacao`.
 | E1-04 | Aprovado | `test_canarios_nao_vazam`: canários ausentes de logs, banco (incluindo WAL) e arquivos; `test_logs_sao_json_e_mascaram_segredos` |
 | E1-05 | Aprovado | `test_frontend.py` (10): nenhum `<script>`, `on*`, `javascript:` ou `style=` nas páginas e templates; nenhum `.js` estático; CSP `script-src 'none'` confirmada também via `curl` |
 | E1-06 | Aprovado | `id` no container → `uid=10001(app)`; `ReadonlyRootfs=true`, `CapDrop=[ALL]`, `no-new-privileges`, 512 MB; `touch /app/x` → `Read-only file system` |
-| E1-07 | Aprovado | `docker port` → `8080/tcp -> 127.0.0.1:8080`; `ss -ltn` → escuta só em `127.0.0.1:8080` |
+| E1-07 | Aprovado, depois substituído | `docker port` → `8080/tcp -> 127.0.0.1:8080`; `ss -ltn` → escuta só em `127.0.0.1:8080`. Em seguida, a pedido do dono do produto, a publicação passou a `0.0.0.0:8080` (ADR-012, G-3 aprovado) |
 | E1-08 | Aprovado | `scripts/check.sh` com `--network none`: Ruff format/check OK, mypy estrito sem erros (19 arquivos), pytest 31 aprovados |
 | E1-09 | Aprovado | Arquivo `core/violacao.py` importando `backuplc.web.app` (passa em Ruff e mypy) → `check.sh` falha: `backuplc/core/violacao.py:1: backuplc.core.violacao não pode importar backuplc.web.app`; arquivo removido em seguida |
 

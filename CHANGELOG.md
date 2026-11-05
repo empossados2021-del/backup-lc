@@ -12,7 +12,7 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/); 
 - `/health/live` e `/health/ready` (banco, migrações, armazenamento).
 - Base visual sem JavaScript: layout, tema claro/escuro, cores de estado e página inicial com o estado da plataforma.
 - Cabeçalhos de segurança (CSP `script-src 'none'`, `X-Frame-Options`, `nosniff`, `no-referrer`).
-- Dockerfile multiestágio (uid 10001, raiz somente leitura) e `compose.yaml` publicado só em `127.0.0.1:8080`.
+- Dockerfile multiestágio (uid 10001, raiz somente leitura) e `compose.yaml` publicado em `0.0.0.0:8080` (ADR-012, substitui a ADR-011; configurável por `BLC_BIND`/`BLC_PORT`). Sem TLS e sem login até a E2.
 - `scripts/init.sh`, `check.sh`, `fmt.sh`, `lock.sh`; 31 testes (unit, integration, security).
 - Runbook de instalação.
 

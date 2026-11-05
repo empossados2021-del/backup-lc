@@ -18,9 +18,10 @@ services:
       - master_key
     volumes:
       - ${BLC_DATA_HOST:-/var/lib/backup-lc}:/data
-    # ADR-011: somente 127.0.0.1 até a definição de acesso (P-03 / G-3).
+    # ADR-012: publicado em todas as interfaces (G-3 aprovado em 2026-11-04).
+    # Para restringir ao host local: BLC_BIND=127.0.0.1 no .env.
     ports:
-      - "127.0.0.1:${BLC_PORT:-8080}:8080"
+      - "${BLC_BIND:-0.0.0.0}:${BLC_PORT:-8080}:8080"
     user: "10001:10001"
     read_only: true
     tmpfs:

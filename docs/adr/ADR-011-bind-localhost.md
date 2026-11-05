@@ -1,6 +1,6 @@
 # ADR-011 — Dashboard só em 127.0.0.1 até a definição de acesso
 
-**Status:** Aceita (provisória até P-03) · 2026-11-04
+**Status:** Substituída pela [ADR-012](ADR-012-publicacao-0-0-0-0.md) · 2026-11-04
 
 **Contexto:** Ainda não está definido em que porta e para quais redes o dashboard será publicado, nem o certificado TLS (P-03). Abrir porta na rede tem impacto (R-02).
 

@@ -11,7 +11,8 @@ scripts/init.sh          # como root: diretório de dados e segredos (idempotent
 docker compose up -d     # build + execução; migrações aplicadas na subida
 ```
 
-O dashboard escuta só em `127.0.0.1:8080`. Acesso por túnel: `ssh -L 8080:127.0.0.1:8080 <usuario>@<servidor>`.
+O dashboard responde em `http://<servidor>:8080` (ADR-012). Ainda **sem TLS e sem login** (login chega na E2).
+Para restringir ao host local, defina `BLC_BIND=127.0.0.1` no `.env`.
 Detalhes em [runbook de instalação](docs/runbooks/instalacao.md).
 
 ## Desenvolvimento
@@ -30,7 +31,7 @@ Estrutura: `src/backuplc/{core,web,migrations}` · testes em `tests/` · decisõ
 
 - [PRD v2.0](docs/prd/PRD-v2.0.md) — o que o sistema faz e não faz
 - [Plano SDD](docs/PLANO.md) — ciclo de trabalho, etapas e portões de aprovação
-- [Decisões de arquitetura](docs/adr/README.md) — ADR-001 a ADR-011
+- [Decisões de arquitetura](docs/adr/README.md) — ADR-001 a ADR-012
 - [Spec E1 — Fundação](docs/specs/E1-fundacao.md)
 - [Runbook de instalação](docs/runbooks/instalacao.md)
 - [Changelog](CHANGELOG.md)

@@ -26,13 +26,15 @@ curl -s http://127.0.0.1:8080/health/ready
 
 ## 3. Acessar o dashboard
 
-O serviço escuta apenas em `127.0.0.1:8080` (ADR-011). De uma estação autorizada:
+O serviço é publicado em `0.0.0.0:8080` (ADR-012): abra `http://<servidor>:8080`.
+
+Atenção: ainda **sem TLS e sem login** (o login chega na E2). O Docker cria regras próprias de iptables, então firewalls como o ufw não bloqueiam essa porta.
+
+Para restringir ao próprio servidor, crie `.env` com `BLC_BIND=127.0.0.1` e rode `docker compose up -d`. O acesso passa a ser por túnel:
 
 ```bash
 ssh -L 8080:127.0.0.1:8080 admlc@<servidor>
 ```
-
-Depois abra `http://localhost:8080` no navegador local.
 
 ## 4. Atualizar para uma nova versão
 
