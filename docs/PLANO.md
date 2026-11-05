@@ -1,6 +1,6 @@
 # Plano do projeto — backup-lc (SDD)
 
-Base: `docs/prd/PRD-v2.0.md` · Atualizado em 2026-11-04
+Base: `docs/prd/PRD-v2.0.md` · Atualizado em 2026-11-04 · Estado atual: [`ESTADO.md`](ESTADO.md)
 
 ## 1. Como trabalhamos (ciclo SDD)
 
@@ -12,13 +12,23 @@ Cada etapa passa pelo mesmo ciclo. Nenhuma fase começa antes da anterior estar 
 | B. Aprovar | Revisar a spec; ajustar ou aprovar | Spec marcada "Aprovada" | Dono do produto |
 | C. Implementar | Testes primeiro, depois código, numa branch `eN/<nome>` | Código + testes | Desenvolvedor |
 | D. Verificar | Rodar testes, lint e tipos; demonstrar cada critério de aceite | Evidência na spec | Dono do produto |
-| E. Entregar | Atualizar docs (README, spec, CHANGELOG), commit, merge na `main`, push (com aprovação de rede) | Versão marcada | Ambos |
+| E. Entregar | Atualizar docs (README, spec, CHANGELOG, `ESTADO.md`), commit, merge na `main`, tag `vX.Y.Z`, push | Versão marcada | Ambos |
+| F. Implantar | Em produção: pull da tag e `docker compose up -d --build`, com aprovação (portões G-1/G-2) | Versão em produção | Dono do produto |
 
 **Definição de pronto:** critérios de aceite demonstrados, testes passando, nenhum segredo em código ou logs, documentação atualizada.
 
-## 2. Portões de aprovação (impacto em rede — regra R-02)
+## 2. Ambientes (ADR-013)
 
-Nenhum destes itens é executado sem aviso prévio e aprovação explícita, a cada vez.
+| Ambiente | Para quê | Regras |
+| --- | --- | --- |
+| VM de desenvolvimento (local) | Código, testes, builds, downloads de pacotes, protótipos | Livre, exceto conexão a switch real (G-4). Guia: [`DESENVOLVIMENTO.md`](DESENVOLVIMENTO.md) |
+| Servidor de produção (cliente) | Executar versões marcadas (`vX.Y.Z`) | Só `git clone`/`pull` de tag + `docker compose up -d --build`, com os portões abaixo. Runbook: [`runbooks/instalacao.md`](runbooks/instalacao.md) |
+
+Fluxo de uma entrega: VM (branch → `check.sh` → merge → tag → push) → produção (pull da tag → build → subir → conferir `/health/ready`).
+
+## 3. Portões de aprovação (impacto em rede — regra R-02)
+
+No servidor de produção, nenhum destes itens é executado sem aviso prévio e aprovação explícita, a cada vez. O G-4 vale em qualquer ambiente.
 
 | Portão | Ação | Quando aparece | O que será informado antes |
 | --- | --- | --- | --- |
@@ -28,9 +38,9 @@ Nenhum destes itens é executado sem aviso prévio e aprovação explícita, a c
 | G-4 | Primeira conexão SSH a um switch real | E6 | Switch, IP, comando exato, horário, conta |
 | G-5 | Ampliar coleta para mais switches, mudar horário ou concorrência | E6 em diante | Lista de switches, horário, concorrência |
 
-Testes de desenvolvimento usam um servidor SSH simulado **dentro do servidor**, em rede Docker interna sem saída, portanto sem impacto na rede.
+Testes de desenvolvimento usam um servidor SSH simulado, em rede Docker interna sem saída, portanto sem impacto em nenhuma rede.
 
-## 3. Etapas
+## 4. Etapas
 
 | Etapa | Entrega | Critérios principais | Portões | Depende de |
 | --- | --- | --- | --- | --- |
@@ -45,7 +55,7 @@ Testes de desenvolvimento usam um servidor SSH simulado **dentro do servidor**, 
 
 O dashboard (E5) só pode ser desenvolvido com dados reais de execuções. Até lá, um gerador local de dados de exemplo alimenta o protótipo.
 
-## 4. Estrutura prevista do repositório
+## 5. Estrutura prevista do repositório
 
 ```
 backup-lc/
@@ -69,7 +79,7 @@ backup-lc/
   tests/            # unit, integration (simulador SSH), security
 ```
 
-## 5. Riscos
+## 6. Riscos
 
 | Risco | Mitigação |
 | --- | --- |
@@ -77,4 +87,5 @@ backup-lc/
 | Coleta causar carga ou bloqueio no switch | Somente leitura, concorrência baixa, sem retentar autenticação, portões G-4 e G-5 |
 | Repositório público expor dados do cliente | Nada de IPs, nomes de switch, configurações ou PRD do cliente no git; resolver P-05 |
 | Servidor único de produção com 3,8 GiB de RAM | Um serviço só, SQLite, limite de memória no container |
+| Erro de desenvolvimento afetar o cliente | Desenvolvimento só na VM; produção recebe apenas tags verificadas (ADR-013) |
 | Escopo crescer | Tudo fora da seção 8 do PRD exige nova spec |

@@ -6,7 +6,7 @@
 | Data | 2026-11-04 |
 | Substitui | PRD v1.1 (escopo reduzido; o v1.1 não é versionado neste repositório) |
 | Metodologia | SDD — Spec-Driven Development (ver `docs/PLANO.md`) |
-| Ambiente | Servidor único de produção, on-premises |
+| Ambientes | VM de desenvolvimento (local) e servidor único de produção, on-premises (ADR-013) |
 
 > Valores marcados com **[HIP]** são hipóteses a confirmar nas pendências (seção 10).
 
@@ -20,8 +20,8 @@ O sistema deve ser **o mais simples possível**. Tudo o que não contribui diret
 
 | ID | Regra |
 | --- | --- |
-| R-01 | **Produção.** O servidor de implantação é produção. Nenhuma ação é executada fora dele. |
-| R-02 | **Impacto em rede exige aprovação.** Qualquer ação que possa ter impacto mínimo na rede (conectar a um switch, baixar imagens ou pacotes, `git push`, abrir porta, alterar firewall, mudar horário ou concorrência da coleta) é informada antes e só é executada após aprovação explícita. |
+| R-01 | **Produção protegida.** Nada é desenvolvido, testado ou depurado no servidor de produção do cliente. Desenvolvimento acontece na VM de desenvolvimento; produção só recebe versões marcadas pelo git (ADR-013). |
+| R-02 | **Impacto em rede exige aprovação.** No ambiente do cliente, qualquer ação que possa ter impacto mínimo na rede (conectar a um switch, baixar imagens ou pacotes, `git pull`/`push`, abrir porta, alterar firewall, mudar horário ou concorrência da coleta) é informada antes e só é executada após aprovação explícita. Conexão a switch real exige aprovação em qualquer ambiente. |
 | R-03 | **Zero processamento no frontend.** O navegador apenas exibe HTML e CSS gerados pelo servidor. Não há JavaScript próprio; gráficos são SVG gerados no servidor; filtros, ordenação, diff e validações acontecem no backend. |
 | R-04 | **Somente leitura nos switches.** O sistema envia apenas comandos de uma lista permitida por tipo de switch e nunca altera configuração. |
 | R-05 | **Segredos protegidos.** Senhas nunca aparecem em texto puro no banco, em logs, no git ou nas telas. |
@@ -126,6 +126,7 @@ MikroTik e backup binário; restauração automática; alertas por e-mail ou men
 | ADR-010 | Verificação (lint, tipos, testes) no próprio servidor, sem CI externo | Cumpre R-01 |
 | ADR-011 | ~~Dashboard publicado só em `127.0.0.1` até P-03~~ — substituída pela ADR-012 | — |
 | ADR-012 | Dashboard publicado em `0.0.0.0:8080`; TLS e redes de origem antes do piloto | Acesso direto pedido pelo dono do produto |
+| ADR-013 | Desenvolvimento em VM local; produção só recebe versões marcadas | Proteger o ambiente do cliente |
 
 Detalhes em [`docs/adr/`](../adr/README.md).
 

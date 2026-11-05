@@ -16,3 +16,4 @@ Formato: contexto, decisão, alternativas e consequências. Uma decisão muda po
 | [010](ADR-010-verificacao-local.md) | Verificação no servidor, sem CI externo | Aceita |
 | [011](ADR-011-bind-localhost.md) | Dashboard só em 127.0.0.1 até a definição de acesso | Substituída pela 012 |
 | [012](ADR-012-publicacao-0-0-0-0.md) | Dashboard publicado em 0.0.0.0:8080 (sem TLS e sem login até a E2) | Aceita |
+| [013](ADR-013-desenvolvimento-em-vm.md) | Desenvolvimento em VM local; produção só recebe versões marcadas | Aceita |

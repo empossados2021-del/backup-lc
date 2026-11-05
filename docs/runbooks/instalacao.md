@@ -1,18 +1,23 @@
 # Runbook — Instalação, atualização e verificação
 
-Público: quem administra o servidor. Todos os comandos rodam **no servidor**, como root, em `/opt/backup-lc`.
+Público: quem administra o servidor de **produção**. Todos os comandos rodam no servidor, como root, em `/opt/backup-lc`.
 
-> Passos marcados com **[REDE]** acessam a internet (portão G-2) e exigem aprovação antes.
+> Passos marcados com **[REDE]** acessam a internet ou o GitHub (portões G-1/G-2) e exigem aprovação antes.
+> Em produção não se desenvolve nem se depura: só se implantam versões marcadas (`vX.Y.Z`) — ADR-013.
+> Para o ambiente de desenvolvimento, veja [`../DESENVOLVIMENTO.md`](../DESENVOLVIMENTO.md).
 
 ## 1. Pré-requisitos
 
-- Docker com Compose v2 ou superior.
+- Docker com Compose v2 ou superior; `git`; `python3` (usado por `scripts/init.sh`).
 - Imagem base `python:3.13-slim` disponível localmente (ou aprovação para baixá-la).
+- Acesso de leitura ao repositório (de preferência uma *deploy key* somente leitura).
 
 ## 2. Primeira instalação
 
 ```bash
+git clone git@github.com:empossados2021-del/backup-lc.git /opt/backup-lc   # [REDE]
 cd /opt/backup-lc
+git checkout vX.Y.Z            # sempre uma versão marcada, nunca um branch em desenvolvimento
 scripts/init.sh                # cria /var/lib/backup-lc e os segredos em /etc/backup-lc/secrets
 docker compose build           # [REDE] na primeira vez: baixa os pacotes travados no uv.lock
 docker compose up -d
@@ -33,18 +38,24 @@ Atenção: ainda **sem TLS e sem login** (o login chega na E2). O Docker cria re
 Para restringir ao próprio servidor, crie `.env` com `BLC_BIND=127.0.0.1` e rode `docker compose up -d`. O acesso passa a ser por túnel:
 
 ```bash
-ssh -L 8080:127.0.0.1:8080 admlc@<servidor>
+ssh -L 8080:127.0.0.1:8080 <usuario>@<servidor>
 ```
 
 ## 4. Atualizar para uma nova versão
 
+Antes: confirme que a versão foi verificada na VM de desenvolvimento (evidências na spec) e faça a cópia da seção 7.
+
 ```bash
 cd /opt/backup-lc
-git pull                       # [REDE] portão G-1
-docker compose build           # [REDE] apenas se pyproject.toml/uv.lock mudarem
-docker compose up -d           # migrações são aplicadas automaticamente na subida
-docker compose ps
+git status --short             # deve estar vazio: produção não tem alterações locais
+git fetch --tags               # [REDE] portão G-1
+git checkout vX.Y.Z
+docker compose up -d --build   # [REDE] baixa pacotes só se pyproject.toml/uv.lock mudarem (G-2)
+docker compose ps              # aguarde "healthy"; migrações são aplicadas na subida
+curl -s http://127.0.0.1:8080/health/ready
 ```
+
+Voltar para a versão anterior: `git checkout <tag anterior>` e `docker compose up -d --build`. Se a nova versão aplicou migrações, primeiro reverta-as (abaixo) ou restaure a cópia do diretório de dados.
 
 Reverter a última migração (somente com backup do diretório de dados):
 
@@ -52,13 +63,9 @@ Reverter a última migração (somente com backup do diretório de dados):
 docker compose run --rm app migrate --down -1
 ```
 
-## 5. Verificação de qualidade (desenvolvimento)
+## 5. Verificação de qualidade
 
-```bash
-scripts/check.sh               # Ruff, mypy e pytest em container sem rede
-scripts/fmt.sh                 # formata o código
-scripts/lock.sh                # [REDE] regenera uv.lock
-```
+Feita na VM de desenvolvimento ([`../DESENVOLVIMENTO.md`](../DESENVOLVIMENTO.md)), não em produção.
 
 ## 6. Diagnóstico rápido
 
