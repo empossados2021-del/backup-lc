@@ -34,8 +34,8 @@ Testes de desenvolvimento usam um servidor SSH simulado **dentro do servidor**, 
 
 | Etapa | Entrega | Critérios principais | Portões | Depende de |
 | --- | --- | --- | --- | --- |
-| **E0 — Especificação base** | PRD v2.0, este plano, ADR-001 a 009 em `docs/adr/`, spec da E1 | PRD e ADRs aprovados | G-1 | — |
-| **E1 — Fundação** | Estrutura do projeto, configuração por arquivo, logs JSON com máscara, SQLite + migrações, `/health`, Dockerfile, Compose, scripts de dev, testes base | Sobe com um comando; recusa subir com configuração inválida; teste de canários passa | G-1, G-2, G-3 | E0, P-03, P-07 |
+| **E0 — Especificação base** ✔ | PRD v2.0, este plano, ADR-001 a 011 em `docs/adr/`, spec da E1 | PRD e ADRs aprovados | G-1 | — |
+| **E1 — Fundação e base visual** | Estrutura do projeto, configuração por arquivo, logs JSON com máscara, SQLite + migrações, `/health`, layout e CSS (tema claro/escuro), Dockerfile, Compose, scripts de verificação, testes base — spec: [`specs/E1-fundacao.md`](specs/E1-fundacao.md) | E1-01 a E1-09 | G-1, G-2 | E0, P-07 |
 | **E2 — Acesso e cadastro** | Login, perfis Admin/Leitura, credenciais cifradas, cadastro de switches, registro de eventos | CA-09, F-01, F-02, F-10, F-11 | G-1 | E1 |
 | **E3 — Coleta** | Coletor Netmiko por tipo, lista de comandos permitidos, validação, armazenamento com SHA-256, versões, verificação de chave SSH; tudo testado contra o simulador local | CA-02, CA-04, CA-05, CA-06, CA-08 | G-1 | E2, P-01 |
 | **E4 — Agendamento e histórico** | Coleta diária, backup manual, retentativas, recuperação após reinício, histórico, diff e download | CA-01, CA-03, CA-07 (no simulador) | G-1 | E3 |

@@ -2,12 +2,15 @@
 
 Backup automático e diário da configuração de switches, com histórico verificável e dashboard de saúde dos backups.
 
-> Status: **E0 — Especificação base** (nenhum código ainda).
+> Status: **E0 concluída** · **E1 — Fundação** em especificação (nenhum código ainda).
 
 ## Documentação
 
 - [PRD v2.0](docs/prd/PRD-v2.0.md) — o que o sistema faz e não faz
 - [Plano SDD](docs/PLANO.md) — ciclo de trabalho, etapas e portões de aprovação
+- [Decisões de arquitetura](docs/adr/README.md) — ADR-001 a ADR-011
+- [Spec E1 — Fundação](docs/specs/E1-fundacao.md)
+- [Changelog](CHANGELOG.md)
 
 ## Regras invioláveis
 

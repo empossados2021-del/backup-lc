@@ -2,7 +2,7 @@
 
 | Campo | Valor |
 | --- | --- |
-| Versão | 2.0 — rascunho para aprovação |
+| Versão | 2.0 — aprovado em 2026-11-04 |
 | Data | 2026-11-04 |
 | Substitui | PRD v1.1 (escopo reduzido; o v1.1 não é versionado neste repositório) |
 | Metodologia | SDD — Spec-Driven Development (ver `docs/PLANO.md`) |
@@ -123,8 +123,10 @@ MikroTik e backup binário; restauração automática; alertas por e-mail ou men
 | ADR-007 | Configurações em arquivos no volume de dados, nome pelo SHA-256, metadados no banco | Simples de verificar e copiar |
 | ADR-008 | Docker Compose, imagem própria, usuário não root | Instalação reprodutível |
 | ADR-009 | `uv` (lock), Ruff, mypy, pytest; testes de coleta contra servidor SSH simulado local, sem tocar a rede | Qualidade sem risco à produção |
+| ADR-010 | Verificação (lint, tipos, testes) no próprio servidor, sem CI externo | Cumpre R-01 |
+| ADR-011 | Dashboard publicado só em `127.0.0.1` até P-03 | Nenhuma porta nova na rede |
 
-Cada ADR terá arquivo próprio em `docs/adr/` na Etapa E0.
+Detalhes em [`docs/adr/`](../adr/README.md).
 
 ## 10. Pendências
 
@@ -134,7 +136,7 @@ Cada ADR terá arquivo próprio em `docs/adr/` na Etapa E0.
 | P-02 | Conta de serviço nos switches com privilégio mínimo para ler a configuração | E6 |
 | P-03 | Acesso ao dashboard: porta, de quais redes, certificado TLS | E1 (porta) |
 | P-04 | Horário da coleta diária e janela permitida | E6 |
-| P-05 | Repositório GitHub público ou privado | Primeiro push |
+| P-05 | ~~Repositório GitHub público ou privado~~ — **resolvida 2026-11-04: público**; nenhum dado do cliente (IPs, nomes, configurações) entra no git | — |
 | P-06 | Retenção (365 dias proposto) | E7 |
 | P-07 | Aprovação dos downloads: imagem base Python e pacotes (lista enviada antes) | E1 |
 
