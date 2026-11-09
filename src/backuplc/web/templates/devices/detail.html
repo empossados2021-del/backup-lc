@@ -1,0 +1,163 @@
+{% extends "base.html" %}
+{% block title %}{{ device.name }}{% endblock %}
+{% block content %}
+<section class="page-head">
+  <div>
+    <p class="eyebrow">Switch</p>
+    <h1>{{ device.name }}</h1>
+  </div>
+  <div class="actions">
+    <a class="button button--ghost" href="/devices">Voltar</a>
+    <a class="button button--ghost" href="/devices/{{ device.id }}/restore">Restore / Download</a>
+    {% if request.state.user.role in ('admin', 'operator') %}
+    <form method="post" action="/devices/{{ device.id }}/collect">
+      <input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}">
+      <button class="button" type="submit">Coletar agora</button>
+    </form>
+    {% endif %}
+  </div>
+</section>
+
+{% if msg == 'coletado_ok' %}
+<p class="flash flash--ok" role="status">Coleta concluída com sucesso.</p>
+{% elif msg == 'coletado_sem_versao' %}
+<p class="flash flash--ok" role="status">Coleta concluída — configuração não mudou.</p>
+{% elif msg %}
+<p class="flash flash--warn" role="status">Coleta finalizada com status: {{ msg }}</p>
+{% endif %}
+
+<div class="card">
+  <div class="card__head">
+    <h2>Informações</h2>
+  </div>
+  <table class="table">
+    <tbody>
+      <tr><th>IP</th><td>{{ device.ip_address }}</td></tr>
+      <tr><th>Tipo</th><td>{{ device.device_type }}</td></tr>
+      <tr><th>Porta SSH</th><td>{{ device.ssh_port }}</td></tr>
+      <tr><th>Credencial</th><td>{{ cred_name }}</td></tr>
+      <tr>
+        <th>Estado</th>
+        <td>
+          {% if device.is_active %}
+          <span class="badge badge--ok">Ativo</span>
+          {% else %}
+          <span class="badge badge--idle">Inativo</span>
+          {% endif %}
+        </td>
+      </tr>
+      <tr>
+        <th>Chave do host</th>
+        <td>
+          {% if host_key %}
+          {{ host_key.key_type }} (registrada em {{ host_key.registered_at.strftime('%d/%m/%Y %H:%M') }})
+          {% if request.state.user.role == 'admin' %}
+          <form method="post" action="/devices/{{ device.id }}/reset-host-key">
+            <input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}">
+            <button class="button button--ghost button--danger" type="submit">Limpar chave</button>
+          </form>
+          {% endif %}
+          {% else %}
+          <span class="muted">Não registrada</span>
+          {% endif %}
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+{% if versions | length >= 2 %}
+<div class="card">
+  <div class="card__head">
+    <h2>Comparar versões</h2>
+    <span class="muted">{{ versions | length }} versão{% if versions | length != 1 %}ões{% endif %} disponível{% if versions | length != 1 %}veis{% endif %}</span>
+  </div>
+  <div class="card__foot">
+    <a class="button button--ghost"
+       href="/devices/{{ device.id }}/versions/{{ versions[1].id }}/diff/{{ versions[0].id }}">
+      Ver diff (anterior → atual)
+    </a>
+    <span class="muted">{{ versions[1].collected_at.strftime('%d/%m %H:%M') }} vs {{ versions[0].collected_at.strftime('%d/%m %H:%M') }}</span>
+  </div>
+</div>
+{% elif versions | length == 1 %}
+<div class="card">
+  <div class="card__head">
+    <h2>Comparar versões</h2>
+  </div>
+  <p class="muted">Apenas 1 versão salva — coleta mais uma vez para poder comparar.</p>
+</div>
+{% endif %}
+
+<div class="card">
+  <div class="card__head">
+    <h2>Histórico de execuções</h2>
+    <form method="get" action="/devices/{{ device.id }}">
+      <label>Filtrar por status:
+        <select name="status">
+          <option value="">Todos</option>
+          {% for s in execution_statuses %}
+          <option value="{{ s }}" {% if status_filter == s %}selected{% endif %}>{{ s }}</option>
+          {% endfor %}
+        </select>
+      </label>
+      <button class="button button--ghost" type="submit">Filtrar</button>
+    </form>
+  </div>
+  {% if executions %}
+  <table class="table">
+    <thead>
+      <tr>
+        <th>Início</th>
+        <th>Duração</th>
+        <th>Status</th>
+        <th>Gatilho</th>
+        <th>Nova versão</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for e in executions %}
+      <tr>
+        <td>{{ e.started_at.strftime('%d/%m/%Y %H:%M:%S') }}</td>
+        <td>
+          {% if e.ended_at %}
+          {{ ((e.ended_at - e.started_at).total_seconds() | int) }}s
+          {% else %}
+          —
+          {% endif %}
+        </td>
+        <td>
+          {% if e.status == 'ok' %}
+          <span class="badge badge--ok">OK</span>
+          {% elif e.status == 'running' %}
+          <span class="badge">Rodando</span>
+          {% else %}
+          <span class="badge badge--crit">{{ e.status }}</span>
+          {% endif %}
+        </td>
+        <td>{{ e.trigger }}</td>
+        <td>
+          {% if e.version_id %}
+          <a href="/devices/{{ device.id }}/versions/{{ e.version_id }}/download">Baixar</a>
+          {% else %}
+          Não
+          {% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  <nav class="pagination" aria-label="Paginação">
+    {% if page > 1 %}
+    <a class="button button--ghost" href="/devices/{{ device.id }}?page={{ page - 1 }}{% if status_filter %}&status={{ status_filter }}{% endif %}">← Anterior</a>
+    {% endif %}
+    <span>Página {{ page }} de {{ total_pages }}</span>
+    {% if page < total_pages %}
+    <a class="button button--ghost" href="/devices/{{ device.id }}?page={{ page + 1 }}{% if status_filter %}&status={{ status_filter }}{% endif %}">Próxima →</a>
+    {% endif %}
+  </nav>
+  {% else %}
+  <p class="muted">Nenhuma execução registrada.</p>
+  {% endif %}
+</div>
+{% endblock %}

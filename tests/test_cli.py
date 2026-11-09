@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import stat
 from pathlib import Path
+from unittest.mock import patch
 
 import pytest
 
@@ -32,3 +33,30 @@ def test_migrate_e_check_config(env: Path) -> None:
     assert main(["migrate"]) == 0
     assert main(["migrate", "--down", "base"]) == 0
     assert main(["migrate"]) == 0
+
+
+def test_create_admin_cria_usuario(env: Path) -> None:
+    with patch("getpass.getpass", return_value="AdminPass12!"):
+        result = main(["create-admin", "--username", "admin"])
+    assert result == 0
+
+
+def test_create_admin_senhas_diferentes(env: Path) -> None:
+    passwords = iter(["AdminPass12!", "OutraSenha12!"])
+    with patch("getpass.getpass", side_effect=lambda _: next(passwords)):
+        result = main(["create-admin", "--username", "admin"])
+    assert result == 1
+
+
+def test_create_admin_senha_fraca(env: Path) -> None:
+    with patch("getpass.getpass", return_value="fraca"):
+        result = main(["create-admin", "--username", "admin"])
+    assert result == 1
+
+
+def test_create_admin_usuario_duplicado(env: Path) -> None:
+    with patch("getpass.getpass", return_value="AdminPass12!"):
+        main(["create-admin", "--username", "admin"])
+    with patch("getpass.getpass", return_value="AdminPass12!"):
+        result = main(["create-admin", "--username", "admin"])
+    assert result == 1

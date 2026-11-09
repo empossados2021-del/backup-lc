@@ -6,34 +6,95 @@
   <div>
     <p class="eyebrow">Visão geral</p>
     <h1>Saúde dos backups</h1>
-    <p class="lead">Nenhum switch cadastrado ainda. Os números abaixo ganham vida a partir da etapa E3.</p>
   </div>
-  <span class="badge badge--idle">Dashboard em construção</span>
+  {% if dash.devices %}
+  <span class="badge badge--ok">{{ dash.pct_healthy | round(0) | int }}% saudáveis</span>
+  {% else %}
+  <span class="badge badge--idle">Sem dispositivos</span>
+  {% endif %}
 </section>
 
 <section class="hero-grid" aria-label="Resumo">
   <article class="card hero">
-    <svg class="gauge" viewBox="0 0 120 120" role="img" aria-label="Percentual de switches saudáveis: sem dados">
-      <circle class="gauge__track" cx="60" cy="60" r="50"/>
-      <text x="60" y="62" class="gauge__value" text-anchor="middle">—</text>
-      <text x="60" y="80" class="gauge__label" text-anchor="middle">saudáveis</text>
-    </svg>
+    {{ donut_svg | safe }}
     <div class="hero__text">
       <h2>Switches saudáveis</h2>
       <p class="muted">Percentual de switches ativos com backup válido nas últimas 26 horas.</p>
     </div>
   </article>
 
-  <div class="stats">
-    {% for state in states %}
-    <article class="card stat stat--{{ state.key }}">
-      <p class="stat__label"><span class="dot" aria-hidden="true"></span>{{ state.label }}</p>
-      <p class="stat__value">0</p>
-      <p class="stat__hint">{{ state.hint }}</p>
+  <div class="stats dash-statusbar">
+    <article class="card stat stat--healthy">
+      <p class="stat__label"><span class="dot" aria-hidden="true"></span>Saudável</p>
+      <p class="stat__value">{{ dash.counts.get('healthy', 0) }}</p>
+      <p class="stat__hint">Backup válido em menos de 26 h</p>
     </article>
-    {% endfor %}
+    <article class="card stat stat--attention">
+      <p class="stat__label"><span class="dot" aria-hidden="true"></span>Atenção</p>
+      <p class="stat__value">{{ dash.counts.get('attention', 0) }}</p>
+      <p class="stat__hint">Última falhou ou 26 a 48 h</p>
+    </article>
+    <article class="card stat stat--critical">
+      <p class="stat__label"><span class="dot" aria-hidden="true"></span>Crítico</p>
+      <p class="stat__value">{{ dash.counts.get('critical', 0) }}</p>
+      <p class="stat__hint">Mais de 48 h ou nunca</p>
+    </article>
+    <article class="card stat stat--inactive">
+      <p class="stat__label"><span class="dot" aria-hidden="true"></span>Inativo</p>
+      <p class="stat__value">{{ dash.counts.get('inactive', 0) }}</p>
+      <p class="stat__hint">Fora da coleta</p>
+    </article>
   </div>
 </section>
+
+{% if dash.devices %}
+<section class="card">
+  <div class="card__head">
+    <h2>Dispositivos</h2>
+    {% if dash.last_cycle %}
+    <span class="muted">Último ciclo: {{ dash.last_cycle.successes }} ok / {{ dash.last_cycle.failures }} falha(s)</span>
+    {% endif %}
+  </div>
+  <table class="table">
+    <thead>
+      <tr>
+        <th>Nome</th>
+        <th>IP</th>
+        <th>Estado</th>
+        <th>Último backup</th>
+        <th>14 dias</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for d in dash.devices %}
+      <tr>
+        <td><a href="/devices/{{ d.device_id }}">{{ d.name }}</a></td>
+        <td class="muted">{{ d.ip_address }}</td>
+        <td>
+          {% if d.state == 'healthy' %}
+          <span class="badge badge--ok">Saudável</span>
+          {% elif d.state == 'attention' %}
+          <span class="badge badge--warn">Atenção</span>
+          {% elif d.state == 'critical' %}
+          <span class="badge badge--crit">Crítico</span>
+          {% else %}
+          <span class="badge badge--idle">Inativo</span>
+          {% endif %}
+        </td>
+        <td class="muted">
+          {% if d.age_hours is not none %}
+            {% if d.age_hours < 1 %}menos de 1h{% elif d.age_hours < 24 %}{{ d.age_hours | int }}h{% else %}{{ (d.age_hours / 24) | int }}d{% endif %}
+          {% else %}
+          —
+          {% endif %}
+        </td>
+        <td>{{ d.sparkline_svg | safe }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</section>
+{% endif %}
 
 <section class="grid-2">
   <article class="card">
@@ -59,13 +120,20 @@
     </ul>
   </article>
 
+  {% if dash.failures_by_class %}
   <article class="card">
-    <div class="card__head"><h2>Próximas etapas</h2></div>
-    <ol class="steps">
-      {% for code, text in roadmap %}
-      <li><span class="steps__code">{{ code }}</span><span>{{ text }}</span></li>
-      {% endfor %}
-    </ol>
+    <div class="card__head"><h2>Falhas por classe (30 dias)</h2></div>
+    {{ hbars_svg | safe }}
   </article>
+  {% else %}
+  <article class="card">
+    <div class="card__head"><h2>Tendência (30 dias)</h2></div>
+    {% if dash.trend_days %}
+    {{ trend_bars_svg | safe }}
+    {% else %}
+    <p class="muted">Sem dados de coleta ainda.</p>
+    {% endif %}
+  </article>
+  {% endif %}
 </section>
 {% endblock %}

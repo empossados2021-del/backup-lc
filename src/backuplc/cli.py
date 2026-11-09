@@ -70,6 +70,43 @@ def _cmd_serve(_args: argparse.Namespace) -> int:
     return 0
 
 
+def _cmd_create_admin(args: argparse.Namespace) -> int:
+    import getpass
+
+    from backuplc.auth.service import create_user, validate_password_policy
+    from backuplc.core.db import Database
+    from backuplc.core.errors import DuplicateError
+    from backuplc.core.migrate import upgrade
+
+    settings = load_settings()
+    load_secrets(settings)
+    db = Database(settings.data_dir)
+    try:
+        upgrade(db)
+        username = args.username or input("Usuário: ").strip()
+        if not username:
+            log.error("nome de usuário inválido")
+            return 1
+        password = getpass.getpass("Senha: ")
+        confirm = getpass.getpass("Confirmar senha: ")
+        if password != confirm:
+            log.error("as senhas não coincidem")
+            return 1
+        try:
+            validate_password_policy(password)
+        except ValueError as exc:
+            log.error("senha inválida", extra={"detail": str(exc)})
+            return 1
+        create_user(db, username, password, "admin")
+        log.info("administrador criado", extra={"username": username})
+    except DuplicateError:
+        log.error("usuário já existe", extra={"username": username})
+        return 1
+    finally:
+        db.dispose()
+    return 0
+
+
 def _cmd_init_secrets(args: argparse.Namespace) -> int:
     from cryptography.fernet import Fernet
 
@@ -110,6 +147,9 @@ def build_parser() -> argparse.ArgumentParser:
     p_init.add_argument("--dir", required=True, help="diretório de destino")
     p_init.add_argument("--force", action="store_true", help="sobrescreve segredos existentes")
     p_init.set_defaults(func=_cmd_init_secrets)
+    p_admin = sub.add_parser("create-admin", help="cria usuário administrador interativamente")
+    p_admin.add_argument("--username", default="", help="nome de usuário (solicitado se omitido)")
+    p_admin.set_defaults(func=_cmd_create_admin)
     return parser
 
 

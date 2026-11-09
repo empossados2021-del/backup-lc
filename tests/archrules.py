@@ -20,12 +20,11 @@ DOMAIN = (
 RULES: dict[str, tuple[str, ...]] = {
     # O núcleo não conhece o domínio nem a web.
     "backuplc.core": DOMAIN,
-    # Coletores recebem dados por parâmetro: sem banco, web ou agendador.
+    # Coletores não acessam web, auth, agendador, dashboard nem CLI.
+    # Podem usar SQLAlchemy (modelos ORM) e backuplc.storage (persistência de config).
     "backuplc.collector": (
-        "sqlalchemy",
         "backuplc.web",
         "backuplc.auth",
-        "backuplc.storage",
         "backuplc.scheduler",
         "backuplc.dashboard",
         "backuplc.cli",

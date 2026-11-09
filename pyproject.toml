@@ -49,6 +49,15 @@ mypy_path = "src"
 explicit_package_bases = true
 plugins = ["pydantic.mypy"]
 
+[[tool.mypy.overrides]]
+module = ["netmiko", "netmiko.*", "apscheduler", "apscheduler.*"]
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+# apscheduler/netmiko tipos são Any; ignore hints redundantes sem stubs.
+module = ["backuplc.collector.runner", "backuplc.scheduler.service"]
+warn_unused_ignores = false
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["src", "tests"]

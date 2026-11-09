@@ -22,13 +22,27 @@
         </svg>
         <span>backup<strong>-lc</strong></span>
       </a>
+      {% if request.state.user %}
       <nav aria-label="Principal">
         <ul class="nav">
           <li><a href="/"{% if active == 'dashboard' %} aria-current="page"{% endif %}>Dashboard</a></li>
-          <li><span class="nav__soon" title="Disponível na etapa E2">Switches</span></li>
-          <li><span class="nav__soon" title="Disponível na etapa E4">Histórico</span></li>
+          <li><a href="/devices"{% if active == 'devices' %} aria-current="page"{% endif %}>Switches</a></li>
+          <li><a href="/mikrotik"{% if active == 'mikrotik' %} aria-current="page"{% endif %}>MikroTik</a></li>
+          <li><a href="/history"{% if active == 'history' %} aria-current="page"{% endif %}>Histórico</a></li>
+          {% if request.state.user.role == 'admin' %}
+          <li><a href="/settings"{% if active == 'settings' %} aria-current="page"{% endif %}>Configurações</a></li>
+          <li><a href="/users"{% if active == 'users' %} aria-current="page"{% endif %}>Usuários</a></li>
+          {% endif %}
         </ul>
       </nav>
+      <div class="topbar__user">
+        <span class="topbar__username">{{ request.state.user.username }}</span>
+        <form method="post" action="/logout" class="topbar__logout">
+          <input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}">
+          <button class="button button--ghost button--sm" type="submit">Sair</button>
+        </form>
+      </div>
+      {% endif %}
     </div>
   </header>
   <main id="main" class="wrap">

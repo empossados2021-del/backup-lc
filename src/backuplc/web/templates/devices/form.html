@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+{% block title %}{{ 'Editar switch' if device else 'Novo switch' }}{% endblock %}
+{% block content %}
+<section class="page-head">
+  <div>
+    <p class="eyebrow"><a href="/devices">Switches</a></p>
+    <h1>{{ 'Editar switch' if device else 'Novo switch' }}</h1>
+  </div>
+</section>
+
+{% if errors %}
+<ul class="flash flash--error" role="alert">
+  {% for e in errors %}<li>{{ e }}</li>{% endfor %}
+</ul>
+{% endif %}
+
+<div class="card">
+  <form method="post" action="{{ '/devices/' + device.id + '/edit' if device else '/devices/new' }}">
+    <input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}">
+
+    <div class="form__group">
+      <label class="form__label" for="name">Nome</label>
+      <input class="form__input" type="text" id="name" name="name" required
+             value="{{ form.name if form is defined else (device.name if device else '') }}">
+    </div>
+
+    <div class="form__group">
+      <label class="form__label" for="ip_address">Endereço IP</label>
+      <input class="form__input" type="text" id="ip_address" name="ip_address" required
+             value="{{ form.ip_address if form is defined else (device.ip_address if device else '') }}">
+    </div>
+
+    <div class="form__group">
+      <label class="form__label" for="device_type">Tipo</label>
+      <select class="form__input" id="device_type" name="device_type">
+        {% for val, label in device_types %}
+        <option value="{{ val }}"
+          {% if (form is defined and form.device_type == val) or (device and device.device_type == val) %}selected{% endif %}>
+          {{ label }}
+        </option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <div class="form__group">
+      <label class="form__label" for="ssh_port">Porta SSH</label>
+      <input class="form__input" type="number" id="ssh_port" name="ssh_port" min="1" max="65535"
+             value="{{ form.ssh_port if form is defined else (device.ssh_port if device else '22') }}">
+    </div>
+
+    <div class="form__group">
+      <label class="form__label" for="credential_id">Credencial</label>
+      {% if creds %}
+      <select class="form__input" id="credential_id" name="credential_id" required>
+        <option value="">Selecione uma credencial</option>
+        {% for c in creds %}
+        <option value="{{ c.id }}"
+          {% if (form is defined and form.credential_id == c.id) or (device and device.credential_id == c.id) %}selected{% endif %}>
+          {{ c.name }} ({{ c.username }})
+        </option>
+        {% endfor %}
+      </select>
+      {% else %}
+      <p class="flash flash--error" role="alert">
+        Nenhuma credencial cadastrada.
+        <a href="/credentials/new">Criar uma credencial agora</a> e voltar aqui em seguida.
+      </p>
+      {% endif %}
+    </div>
+
+    <div class="form__group form__group--check">
+      <input type="checkbox" id="is_active" name="is_active" value="1"
+        {% if (form is defined and form.is_active == '1') or (device and device.is_active) or (not device and not form is defined) %}checked{% endif %}>
+      <label for="is_active">Ativo</label>
+    </div>
+
+    <div class="form__actions">
+      <button class="button" type="submit">{{ 'Salvar' if device else 'Cadastrar' }}</button>
+      <a href="/devices">Cancelar</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

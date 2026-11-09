@@ -24,8 +24,8 @@ def _assert_sem_js(html: str, origem: str) -> None:
 
 
 @pytest.mark.parametrize("caminho", HTML_PAGES)
-def test_paginas_sem_javascript(client: TestClient, caminho: str) -> None:
-    resposta = client.get(caminho)
+def test_paginas_sem_javascript(admin_client: TestClient, caminho: str) -> None:
+    resposta = admin_client.get(caminho)
     assert resposta.headers["content-type"].startswith("text/html")
     _assert_sem_js(resposta.text, caminho)
 
@@ -39,13 +39,13 @@ def test_nenhum_arquivo_js_estatico() -> None:
     assert not list(STATIC_DIR.rglob("*.js"))
 
 
-def test_estilos_sem_atributo_style(client: TestClient) -> None:
+def test_estilos_sem_atributo_style(admin_client: TestClient) -> None:
     # A CSP só permite CSS do próprio servidor; style="" inline seria bloqueado.
-    assert not re.search(r"\sstyle\s*=", client.get("/").text)
+    assert not re.search(r"\sstyle\s*=", admin_client.get("/").text)
 
 
-def test_cabecalhos_de_seguranca(client: TestClient) -> None:
-    cabecalhos = client.get("/").headers
+def test_cabecalhos_de_seguranca(admin_client: TestClient) -> None:
+    cabecalhos = admin_client.get("/").headers
     csp = cabecalhos["content-security-policy"]
     assert "script-src 'none'" in csp
     assert "frame-ancestors 'none'" in csp
@@ -55,19 +55,19 @@ def test_cabecalhos_de_seguranca(client: TestClient) -> None:
     assert "server" not in cabecalhos
 
 
-def test_dashboard_renderiza_estados(client: TestClient) -> None:
-    html = client.get("/").text
+def test_dashboard_renderiza_estados(admin_client: TestClient) -> None:
+    html = admin_client.get("/").text
     for rotulo in ("Saudável", "Atenção", "Crítico", "Inativo", "Estado da plataforma"):
         assert rotulo in html
     assert 'http-equiv="refresh"' in html
 
 
-def test_head_na_pagina_inicial(client: TestClient) -> None:
-    assert client.head("/").status_code == 200
+def test_head_na_pagina_inicial(admin_client: TestClient) -> None:
+    assert admin_client.head("/").status_code == 200
 
 
-def test_css_servido(client: TestClient) -> None:
-    resposta = client.get("/static/css/app.css")
+def test_css_servido(admin_client: TestClient) -> None:
+    resposta = admin_client.get("/static/css/app.css")
     assert resposta.status_code == 200
     assert resposta.headers["content-type"].startswith("text/css")
 

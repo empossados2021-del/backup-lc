@@ -1,4 +1,4 @@
-"""Identificador de requisição, log de acesso e cabeçalhos de segurança (Spec E1, item 8)."""
+"""Identificador de requisição, log de acesso, cabeçalhos de segurança e autenticação."""
 
 from __future__ import annotations
 
@@ -8,7 +8,7 @@ from uuid import uuid4
 
 from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoint
 from starlette.requests import Request
-from starlette.responses import Response
+from starlette.responses import RedirectResponse, Response
 
 from backuplc.core.logging import request_id_var
 
@@ -36,6 +36,38 @@ SECURITY_HEADERS = {
     "Cross-Origin-Opener-Policy": "same-origin",
     "Permissions-Policy": "camera=(), microphone=(), geolocation=()",
 }
+
+
+_PUBLIC_PATHS: frozenset[str] = frozenset(
+    {"/login", "/health/live", "/health/ready", "/docs", "/redoc", "/openapi.json"}
+)
+
+
+class AuthMiddleware(BaseHTTPMiddleware):
+    """Valida sessão e injeta user + csrf_token no request.state."""
+
+    async def dispatch(self, request: Request, call_next: RequestResponseEndpoint) -> Response:
+        path = request.url.path
+        if path in _PUBLIC_PATHS or path.startswith("/static"):
+            return await call_next(request)
+
+        session_id = request.cookies.get("session_id")
+        if not session_id:
+            return RedirectResponse(f"/login?next={path}", status_code=302)
+
+        from backuplc.auth.service import get_session_user, make_csrf_token, touch_session
+
+        db = request.app.state.db
+        user = get_session_user(db, session_id)
+        if user is None:
+            return RedirectResponse(f"/login?next={path}", status_code=302)
+
+        touch_session(db, session_id)
+        request.state.user = user
+        request.state.csrf_token = make_csrf_token(
+            session_id, request.app.state.secrets.session_secret
+        )
+        return await call_next(request)
 
 
 class RequestContextMiddleware(BaseHTTPMiddleware):

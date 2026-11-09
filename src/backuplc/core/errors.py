@@ -4,3 +4,7 @@ class BackupLcError(Exception):
 
 class ConfigError(BackupLcError):
     """Configuração ausente ou inválida. A mensagem cita a variável, nunca o valor."""
+
+
+class DuplicateError(BackupLcError):
+    """Tentativa de criar um recurso com chave que já existe."""

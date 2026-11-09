@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% block title %}Restore — {{ device.name }}{% endblock %}
+{% block content %}
+<section class="page-head">
+  <div>
+    <p class="eyebrow">Dispositivo</p>
+    <h1>{{ device.name }} — Restore</h1>
+  </div>
+  <a class="button button--ghost" href="/devices/{{ device.id }}">Voltar</a>
+</section>
+
+<div class="card">
+  <div class="card__head"><h2>Escolher data do backup</h2></div>
+  <form method="get" action="/devices/{{ device.id }}/restore">
+    <div class="form__group">
+      <label class="form__label" for="date">Data (UTC)</label>
+      <input class="form__input" type="date" id="date" name="date"
+             value="{{ selected_date }}" max="{{ today }}">
+    </div>
+    <div class="form__actions">
+      <button class="button" type="submit">Verificar</button>
+    </div>
+  </form>
+</div>
+
+{% if selected_date %}
+<div class="card">
+  <div class="card__head">
+    <h2>Backups de {{ selected_date_fmt }}</h2>
+  </div>
+  {% if versions %}
+  <table class="table">
+    <thead>
+      <tr>
+        <th>Horário (UTC)</th>
+        <th>Tamanho</th>
+        <th>SHA-256</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for v in versions %}
+      <tr>
+        <td>{{ v.collected_at.strftime('%H:%M:%S') }}</td>
+        <td class="muted">{{ v.size_bytes }} B</td>
+        <td><code>{{ v.sha256_raw[:8] }}</code></td>
+        <td>
+          <a class="button button--ghost button--sm"
+             href="/devices/{{ device.id }}/versions/{{ v.id }}/download">Baixar</a>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <div class="empty-state">
+    <p class="muted">Nenhum backup encontrado para {{ selected_date_fmt }}.</p>
+  </div>
+  {% endif %}
+</div>
+{% endif %}
+{% endblock %}

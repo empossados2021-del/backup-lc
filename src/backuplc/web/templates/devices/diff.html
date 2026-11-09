@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block title %}Diff — {{ device.name }}{% endblock %}
+{% block content %}
+<section class="page-head">
+  <div>
+    <p class="eyebrow">Switch</p>
+    <h1>{{ device.name }} — Diferença entre versões</h1>
+  </div>
+  <a class="button button--ghost" href="/devices/{{ device.id }}">Voltar</a>
+</section>
+
+<div class="card">
+  <div class="card__head">
+    <h2>Versão A (anterior)</h2>
+  </div>
+  <table class="table">
+    <tbody>
+      <tr><th>Coletado em</th><td>{{ ver_a.collected_at.strftime('%d/%m/%Y %H:%M:%S') }}</td></tr>
+      <tr><th>SHA-256</th><td><code>{{ ver_a.sha256_raw[:16] }}</code></td></tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="card">
+  <div class="card__head">
+    <h2>Versão B (atual)</h2>
+  </div>
+  <table class="table">
+    <tbody>
+      <tr><th>Coletado em</th><td>{{ ver_b.collected_at.strftime('%d/%m/%Y %H:%M:%S') }}</td></tr>
+      <tr><th>SHA-256</th><td><code>{{ ver_b.sha256_raw[:16] }}</code></td></tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="card">
+  <div class="card__head">
+    <h2>Diferenças</h2>
+  </div>
+  {% if diff %}
+  <pre class="diff">{{ diff }}</pre>
+  {% else %}
+  <p class="muted">As duas versões são idênticas.</p>
+  {% endif %}
+</div>
+{% endblock %}

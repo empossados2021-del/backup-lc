@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+{% set page_title = title if title is defined else 'Switches' %}
+{% set collect_action = '/mikrotik/collect-all' if active == 'mikrotik' else '/devices/collect-all' %}
+{% block title %}{{ page_title }}{% endblock %}
+{% block content %}
+<section class="page-head">
+  <div>
+    <p class="eyebrow">Cadastro</p>
+    <h1>{{ page_title }}</h1>
+  </div>
+  {% if request.state.user.role in ('admin', 'operator') %}
+  <div>
+    <form method="post" action="{{ collect_action }}">
+      <input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}">
+      <button class="button button--ghost" type="submit">Coletar todos agora</button>
+    </form>
+    {% if request.state.user.role == 'admin' %}
+    <a class="button" href="/devices/new">Novo dispositivo</a>
+    {% endif %}
+  </div>
+  {% endif %}
+</section>
+
+{% if msg == 'criado' %}
+<p class="flash flash--ok" role="status">Switch cadastrado com sucesso.</p>
+{% elif msg == 'atualizado' %}
+<p class="flash flash--ok" role="status">Switch atualizado com sucesso.</p>
+{% elif msg == 'excluido' %}
+<p class="flash flash--ok" role="status">Switch excluído.</p>
+{% elif msg.startswith('coleta_iniciada_') %}
+<p class="flash flash--ok" role="status">Coleta iniciada para {{ msg[16:] }} dispositivo(s) ativo(s).</p>
+{% endif %}
+
+{% if devices %}
+<div class="card">
+  <table class="table">
+    <thead>
+      <tr>
+        <th>Nome</th>
+        <th>IP</th>
+        <th>Tipo</th>
+        <th>Porta SSH</th>
+        <th>Credencial</th>
+        <th>Estado</th>
+        {% if request.state.user.role == 'admin' %}<th>Ações</th>{% endif %}
+      </tr>
+    </thead>
+    <tbody>
+      {% for d in devices %}
+      <tr>
+        <td>{{ d.name }}</td>
+        <td>{{ d.ip_address }}</td>
+        <td>{{ d.device_type }}</td>
+        <td>{{ d.ssh_port }}</td>
+        <td>{{ creds[d.credential_id].name if d.credential_id in creds else '—' }}</td>
+        <td>
+          {% if d.is_active %}
+          <span class="badge badge--ok">Ativo</span>
+          {% else %}
+          <span class="badge badge--idle">Inativo</span>
+          {% endif %}
+        </td>
+        {% if request.state.user.role == 'admin' %}
+        <td class="actions">
+          <a href="/devices/{{ d.id }}/edit">Editar</a>
+          <a class="button button--ghost button--danger" href="/devices/{{ d.id }}/delete">Excluir</a>
+        </td>
+        {% endif %}
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% else %}
+<div class="card empty-state">
+  <p class="muted">Nenhum dispositivo cadastrado.</p>
+  {% if request.state.user.role == 'admin' %}
+  <a class="button" href="/devices/new">Cadastrar o primeiro dispositivo</a>
+  {% endif %}
+</div>
+{% endif %}
+{% endblock %}

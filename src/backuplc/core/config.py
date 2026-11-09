@@ -29,6 +29,9 @@ class Settings(BaseSettings):
     # Dentro do container; a publicação na rede é controlada pelo compose (ADR-011).
     host: str = "0.0.0.0"  # noqa: S104
     port: int = Field(default=8080, ge=1, le=65535)
+    environment: Literal["production", "development"] = "production"
+    max_concurrent: int = Field(default=5, ge=1, le=20)
+    timezone: str = "America/Sao_Paulo"
 
 
 @dataclass(frozen=True)

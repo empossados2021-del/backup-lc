@@ -17,13 +17,17 @@ pytestmark = [pytest.mark.integration, pytest.mark.security]
 
 
 def test_canarios_nao_vazam(
-    log_stream: io.StringIO, client: TestClient, db: Database, settings: Settings
+    log_stream: io.StringIO,
+    client: TestClient,
+    admin_client: TestClient,
+    db: Database,
+    settings: Settings,
 ) -> None:
     # Fluxos de sucesso e de erro.
-    assert client.get("/").status_code == 200
+    assert admin_client.get("/").status_code == 200
     assert client.get("/health/ready").status_code == 200
-    assert client.get("/nao-existe").status_code == 404
-    assert client.get(f"/busca?token={CANARY_SESSION}").status_code == 404
+    assert admin_client.get("/nao-existe").status_code == 404
+    assert admin_client.get(f"/busca?token={CANARY_SESSION}").status_code == 404
 
     # Evento com segredo no detalhe: deve ser mascarado antes de gravar.
     with db.session() as session:
