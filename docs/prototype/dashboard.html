@@ -1,0 +1,278 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Dashboard de saúde · backup-lc (protótipo)</title>
+  <style>
+    :root {
+      --bg: #f5f6f8;
+      --surface: #ffffff;
+      --surface-2: #f0f2f5;
+      --border: #e2e5ea;
+      --text: #15181e;
+      --muted: #5b6370;
+      --accent: #2a62d9;
+      --accent-ink: #ffffff;
+      --ok: #15734a;
+      --ok-bg: #e3f3ea;
+      --warn: #8f5500;
+      --warn-bg: #fcf0d9;
+      --crit: #b3261e;
+      --crit-bg: #fce8e6;
+      --idle: #5b6370;
+      --idle-bg: #eceef1;
+      --radius: 14px;
+      --radius-sm: 8px;
+      --shadow: 0 1px 2px rgb(16 24 40 / 0.05), 0 2px 8px rgb(16 24 40 / 0.06);
+      --font: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+      --mono: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+    }
+    *, *::before, *::after { box-sizing: border-box; }
+    body { margin: 0; background: var(--bg); color: var(--text); font: 15px/1.5 var(--font); }
+    .wrap { width: 100%; max-width: 1180px; margin-inline: auto; padding-inline: 20px; }
+    main { padding-block: 28px 40px; }
+    .muted { color: var(--muted); }
+    h1 { margin: 0; font-size: 1.75rem; letter-spacing: -0.01em; }
+    h2 { margin: 0; font-size: 1rem; }
+    .eyebrow { margin: 0 0 4px; color: var(--muted); font-size: 0.8rem; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; }
+    .page-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; flex-wrap: wrap; margin-bottom: 24px; }
+    .badge { display: inline-flex; align-items: center; gap: 6px; padding: 3px 10px; border-radius: 999px; font-size: 0.8rem; font-weight: 600; white-space: nowrap; }
+    .badge--ok { color: var(--ok); background: var(--ok-bg); }
+    .badge--warn { color: var(--warn); background: var(--warn-bg); }
+    .badge--crit { color: var(--crit); background: var(--crit-bg); }
+    .badge--idle { color: var(--idle); background: var(--idle-bg); }
+    .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); padding: 20px; margin-bottom: 16px; }
+    .card__head { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 12px; }
+    .grid-2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; margin-bottom: 16px; }
+    .table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+    .table th, .table td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--border); }
+    .table th { font-weight: 600; color: var(--muted); font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.04em; }
+    .table tbody tr:last-child td { border-bottom: none; }
+    .table tbody tr:hover td { background: var(--surface-2); }
+    code { font-family: var(--mono); font-size: 0.85em; }
+    a { color: var(--accent); }
+    .dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+    .checks { list-style: none; margin: 0; padding: 0; }
+    .checks li { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-top: 1px solid var(--border); justify-content: space-between; }
+    .checks li:first-child { border-top: 0; }
+
+    /* Dashboard */
+    .dash-statusbar {
+      display: flex; align-items: center; gap: 20px; flex-wrap: wrap;
+      padding: 14px 20px; background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); margin-bottom: 16px; font-size: 0.9rem;
+    }
+    .dash-pct { font-size: 1.75rem; font-weight: 700; font-variant-numeric: tabular-nums; line-height: 1; color: var(--text); }
+    .dash-pct__label { color: var(--muted); font-size: 0.8rem; font-weight: 500; }
+    .dash-sep { color: var(--border); margin-inline: 4px; }
+    .dash-state { display: inline-flex; align-items: center; gap: 6px; font-weight: 600; }
+    .dash-state--healthy .dot { background: var(--ok); }
+    .dash-state--attention .dot { background: var(--warn); }
+    .dash-state--critical .dot { background: var(--crit); }
+    .dash-state--inactive .dot { background: var(--idle); }
+    .dash-updated { margin-left: auto; font-size: 0.8rem; }
+    .dash-cycle { font-size: 0.85rem; margin-bottom: 16px; padding: 8px 0; border-bottom: 1px solid var(--border); }
+    .dash-row--critical td:first-child { border-left: 3px solid var(--crit); padding-left: 9px; }
+    .dash-row--attention td:first-child { border-left: 3px solid var(--warn); padding-left: 9px; }
+    .dash-fail { color: var(--crit); font-size: 0.8rem; }
+    .sparkline { display: block; }
+    .spark-ok { fill: var(--ok); }
+    .spark-fail { fill: var(--crit); }
+    .spark-none { fill: var(--idle-bg); }
+    .dash-platform { margin-top: 16px; }
+  </style>
+</head>
+<body>
+<main class="wrap">
+
+<section class="page-head">
+  <div>
+    <p class="eyebrow">Visão geral</p>
+    <h1>Saúde dos backups</h1>
+  </div>
+</section>
+
+<!-- Status bar -->
+<div class="dash-statusbar" role="status" aria-label="Resumo de saúde">
+  <strong class="dash-pct">75%</strong>
+  <span class="dash-pct__label">saudáveis</span>
+  <span class="dash-sep" aria-hidden="true">|</span>
+  <span class="dash-state dash-state--healthy"><span class="dot" aria-hidden="true"></span>3 Saudável</span>
+  <span class="dash-state dash-state--attention"><span class="dot" aria-hidden="true"></span>1 Atenção</span>
+  <span class="dash-state dash-state--critical"><span class="dot" aria-hidden="true"></span>0 Crítico</span>
+  <span class="dash-state dash-state--inactive"><span class="dot" aria-hidden="true"></span>1 Inativo</span>
+  <span class="dash-updated muted">Atualizado 06/11 02:14</span>
+</div>
+
+<!-- Last cycle -->
+<p class="dash-cycle muted">
+  Último ciclo: 06/11/2026 02:00 → 240s · 3 OK / 1 falha
+</p>
+
+<!-- Device table -->
+<div class="card">
+  <div class="card__head"><h2>Switches</h2></div>
+  <table class="table">
+    <thead>
+      <tr>
+        <th>Switch</th>
+        <th>IP</th>
+        <th>Estado</th>
+        <th>Último backup válido</th>
+        <th>Última falha</th>
+        <th aria-label="Histórico 14 dias">14 dias</th>
+      </tr>
+    </thead>
+    <tbody>
+      <!-- Saudável -->
+      <tr class="dash-row--healthy">
+        <td><a href="#">sw-core-01</a></td>
+        <td><code>10.0.0.1</code></td>
+        <td><span class="badge badge--ok">Saudável</span></td>
+        <td>06/11/2026 02:01 <span class="muted">(1h)</span></td>
+        <td><span class="muted">—</span></td>
+        <td>
+          <svg class="sparkline" viewBox="0 0 166 16" width="166" height="16" aria-hidden="true">
+            <rect class="spark-ok" x="0" y="0" width="10" height="16" rx="2"><title>Dia -13</title></rect>
+            <rect class="spark-ok" x="12" y="0" width="10" height="16" rx="2"><title>Dia -12</title></rect>
+            <rect class="spark-ok" x="24" y="0" width="10" height="16" rx="2"><title>Dia -11</title></rect>
+            <rect class="spark-ok" x="36" y="0" width="10" height="16" rx="2"><title>Dia -10</title></rect>
+            <rect class="spark-ok" x="48" y="0" width="10" height="16" rx="2"><title>Dia -9</title></rect>
+            <rect class="spark-ok" x="60" y="0" width="10" height="16" rx="2"><title>Dia -8</title></rect>
+            <rect class="spark-ok" x="72" y="0" width="10" height="16" rx="2"><title>Dia -7</title></rect>
+            <rect class="spark-ok" x="84" y="0" width="10" height="16" rx="2"><title>Dia -6</title></rect>
+            <rect class="spark-ok" x="96" y="0" width="10" height="16" rx="2"><title>Dia -5</title></rect>
+            <rect class="spark-ok" x="108" y="0" width="10" height="16" rx="2"><title>Dia -4</title></rect>
+            <rect class="spark-ok" x="120" y="0" width="10" height="16" rx="2"><title>Dia -3</title></rect>
+            <rect class="spark-ok" x="132" y="0" width="10" height="16" rx="2"><title>Dia -2</title></rect>
+            <rect class="spark-ok" x="144" y="0" width="10" height="16" rx="2"><title>Dia -1</title></rect>
+            <rect class="spark-ok" x="156" y="0" width="10" height="16" rx="2"><title>Dia -0</title></rect>
+          </svg>
+        </td>
+      </tr>
+      <!-- Atenção -->
+      <tr class="dash-row--attention">
+        <td><a href="#">sw-dist-02</a></td>
+        <td><code>10.0.0.2</code></td>
+        <td><span class="badge badge--warn">Atenção</span></td>
+        <td>05/11/2026 08:30 <span class="muted">(18h)</span></td>
+        <td><code class="dash-fail">CONEXAO</code></td>
+        <td>
+          <svg class="sparkline" viewBox="0 0 166 16" width="166" height="16" aria-hidden="true">
+            <rect class="spark-ok" x="0" y="0" width="10" height="16" rx="2"><title>Dia -13</title></rect>
+            <rect class="spark-ok" x="12" y="0" width="10" height="16" rx="2"><title>Dia -12</title></rect>
+            <rect class="spark-ok" x="24" y="0" width="10" height="16" rx="2"><title>Dia -11</title></rect>
+            <rect class="spark-ok" x="36" y="0" width="10" height="16" rx="2"><title>Dia -10</title></rect>
+            <rect class="spark-ok" x="48" y="0" width="10" height="16" rx="2"><title>Dia -9</title></rect>
+            <rect class="spark-ok" x="60" y="0" width="10" height="16" rx="2"><title>Dia -8</title></rect>
+            <rect class="spark-ok" x="72" y="0" width="10" height="16" rx="2"><title>Dia -7</title></rect>
+            <rect class="spark-ok" x="84" y="0" width="10" height="16" rx="2"><title>Dia -6</title></rect>
+            <rect class="spark-ok" x="96" y="0" width="10" height="16" rx="2"><title>Dia -5</title></rect>
+            <rect class="spark-ok" x="108" y="0" width="10" height="16" rx="2"><title>Dia -4</title></rect>
+            <rect class="spark-none" x="120" y="0" width="10" height="16" rx="2"><title>Dia -3</title></rect>
+            <rect class="spark-ok" x="132" y="0" width="10" height="16" rx="2"><title>Dia -2</title></rect>
+            <rect class="spark-ok" x="144" y="0" width="10" height="16" rx="2"><title>Dia -1</title></rect>
+            <rect class="spark-fail" x="156" y="0" width="10" height="16" rx="2"><title>Dia -0</title></rect>
+          </svg>
+        </td>
+      </tr>
+      <!-- Crítico -->
+      <tr class="dash-row--critical">
+        <td><a href="#">sw-access-03</a></td>
+        <td><code>10.0.0.3</code></td>
+        <td><span class="badge badge--crit">Crítico</span></td>
+        <td><span class="muted">—</span></td>
+        <td><span class="muted">—</span></td>
+        <td>
+          <svg class="sparkline" viewBox="0 0 166 16" width="166" height="16" aria-hidden="true">
+            <rect class="spark-none" x="0" y="0" width="10" height="16" rx="2"><title>Dia -13</title></rect>
+            <rect class="spark-none" x="12" y="0" width="10" height="16" rx="2"><title>Dia -12</title></rect>
+            <rect class="spark-none" x="24" y="0" width="10" height="16" rx="2"><title>Dia -11</title></rect>
+            <rect class="spark-none" x="36" y="0" width="10" height="16" rx="2"><title>Dia -10</title></rect>
+            <rect class="spark-none" x="48" y="0" width="10" height="16" rx="2"><title>Dia -9</title></rect>
+            <rect class="spark-none" x="60" y="0" width="10" height="16" rx="2"><title>Dia -8</title></rect>
+            <rect class="spark-none" x="72" y="0" width="10" height="16" rx="2"><title>Dia -7</title></rect>
+            <rect class="spark-none" x="84" y="0" width="10" height="16" rx="2"><title>Dia -6</title></rect>
+            <rect class="spark-none" x="96" y="0" width="10" height="16" rx="2"><title>Dia -5</title></rect>
+            <rect class="spark-none" x="108" y="0" width="10" height="16" rx="2"><title>Dia -4</title></rect>
+            <rect class="spark-none" x="120" y="0" width="10" height="16" rx="2"><title>Dia -3</title></rect>
+            <rect class="spark-none" x="132" y="0" width="10" height="16" rx="2"><title>Dia -2</title></rect>
+            <rect class="spark-none" x="144" y="0" width="10" height="16" rx="2"><title>Dia -1</title></rect>
+            <rect class="spark-none" x="156" y="0" width="10" height="16" rx="2"><title>Dia -0</title></rect>
+          </svg>
+        </td>
+      </tr>
+      <!-- Inativo -->
+      <tr class="dash-row--inactive">
+        <td><a href="#">sw-old-04</a></td>
+        <td><code>10.0.0.4</code></td>
+        <td><span class="badge badge--idle">Inativo</span></td>
+        <td><span class="muted">—</span></td>
+        <td><span class="muted">—</span></td>
+        <td>
+          <svg class="sparkline" viewBox="0 0 166 16" width="166" height="16" aria-hidden="true">
+            <rect class="spark-none" x="0" y="0" width="10" height="16" rx="2"><title>Dia -13</title></rect>
+            <rect class="spark-none" x="12" y="0" width="10" height="16" rx="2"><title>Dia -12</title></rect>
+            <rect class="spark-none" x="24" y="0" width="10" height="16" rx="2"><title>Dia -11</title></rect>
+            <rect class="spark-none" x="36" y="0" width="10" height="16" rx="2"><title>Dia -10</title></rect>
+            <rect class="spark-none" x="48" y="0" width="10" height="16" rx="2"><title>Dia -9</title></rect>
+            <rect class="spark-none" x="60" y="0" width="10" height="16" rx="2"><title>Dia -8</title></rect>
+            <rect class="spark-none" x="72" y="0" width="10" height="16" rx="2"><title>Dia -7</title></rect>
+            <rect class="spark-none" x="84" y="0" width="10" height="16" rx="2"><title>Dia -6</title></rect>
+            <rect class="spark-none" x="96" y="0" width="10" height="16" rx="2"><title>Dia -5</title></rect>
+            <rect class="spark-none" x="108" y="0" width="10" height="16" rx="2"><title>Dia -4</title></rect>
+            <rect class="spark-none" x="120" y="0" width="10" height="16" rx="2"><title>Dia -3</title></rect>
+            <rect class="spark-none" x="132" y="0" width="10" height="16" rx="2"><title>Dia -2</title></rect>
+            <rect class="spark-none" x="144" y="0" width="10" height="16" rx="2"><title>Dia -1</title></rect>
+            <rect class="spark-none" x="156" y="0" width="10" height="16" rx="2"><title>Dia -0</title></rect>
+          </svg>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- Bottom row -->
+<div class="grid-2">
+  <div class="card">
+    <div class="card__head"><h2>Falhas por motivo <span class="muted">(30 dias)</span></h2></div>
+    <table class="table">
+      <thead><tr><th>Classe</th><th>Ocorrências</th></tr></thead>
+      <tbody>
+        <tr><td><code>CONEXAO</code></td><td>1</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="card">
+    <div class="card__head"><h2>Alterações detectadas <span class="muted">(7 dias)</span></h2></div>
+    <table class="table">
+      <thead><tr><th>Switch</th><th>Detectada em</th><th>Versão</th></tr></thead>
+      <tbody>
+        <tr>
+          <td>sw-core-01</td>
+          <td>05/11/2026 08:30</td>
+          <td><a href="#">baixar</a></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Platform health -->
+<div class="card dash-platform">
+  <div class="card__head">
+    <h2>Estado da plataforma</h2>
+    <span class="badge badge--ok">Operacional</span>
+  </div>
+  <ul class="checks">
+    <li><span>Banco de dados</span><span class="badge badge--ok">OK</span></li>
+    <li><span>Migrações em dia</span><span class="badge badge--ok">OK</span></li>
+    <li><span>Armazenamento gravável</span><span class="badge badge--ok">OK</span></li>
+  </ul>
+</div>
+
+</main>
+</body>
+</html>

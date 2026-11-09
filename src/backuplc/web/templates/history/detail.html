@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+{% block title %}Detalhe do Ciclo{% endblock %}
+{% block content %}
+<section class="page-head">
+  <div>
+    <p class="eyebrow">Histórico</p>
+    <h1>Ciclo de {{ started_at.strftime('%d/%m/%Y %H:%M') }} UTC</h1>
+    <p class="lead">
+      {% if trigger == 'scheduled' %}Coleta agendada{% else %}Coleta manual{% endif %}
+      · {{ executions | length }} dispositivo{{ 's' if executions | length != 1 else '' }}
+    </p>
+  </div>
+  <a href="/history{% if trigger_filter %}?trigger={{ trigger_filter }}{% endif %}" class="button button--ghost">← Voltar</a>
+</section>
+
+<div class="card">
+  {% if executions %}
+  <table class="table">
+    <thead>
+      <tr>
+        <th>Dispositivo</th>
+        <th>Iniciado</th>
+        <th>Duração</th>
+        <th>Status</th>
+        <th>Detalhe</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for e in executions %}
+      {% set duration_s = ((e.ended_at - e.started_at).total_seconds() | int) if e.ended_at else none %}
+      <tr>
+        <td><a href="/devices/{{ e.device_id }}">{{ e.device_name }}</a></td>
+        <td class="muted">{{ e.started_at.strftime('%H:%M:%S') }}</td>
+        <td class="muted">
+          {% if duration_s is not none %}
+            {% if duration_s >= 60 %}
+              {{ (duration_s // 60) }}m {{ (duration_s % 60) }}s
+            {% else %}
+              {{ duration_s }}s
+            {% endif %}
+          {% else %}
+            —
+          {% endif %}
+        </td>
+        <td>
+          {% if e.status == 'ok' %}
+          <span class="badge badge--ok">ok</span>
+          {% elif e.status == 'running' %}
+          <span class="badge badge--running">em andamento</span>
+          {% else %}
+          <span class="badge badge--error">{{ e.status }}</span>
+          {% endif %}
+        </td>
+        <td class="muted">
+          {% if e.failure_detail %}
+          <small>{{ e.failure_detail | truncate(80) }}</small>
+          {% else %}
+          —
+          {% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <div class="empty-state">
+    <p class="muted">Nenhuma execução encontrada para este ciclo.</p>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

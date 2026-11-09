@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% block title %}Usuários{% endblock %}
+{% block content %}
+<section class="page-head">
+  <div>
+    <p class="eyebrow">Administração</p>
+    <h1>Usuários</h1>
+  </div>
+  <a class="button" href="/users/new">Novo usuário</a>
+</section>
+
+{% if msg == 'criado' %}
+<p class="flash flash--ok" role="status">Usuário criado com sucesso.</p>
+{% elif msg == 'atualizado' %}
+<p class="flash flash--ok" role="status">Usuário atualizado.</p>
+{% elif msg == 'senha_alterada' %}
+<p class="flash flash--ok" role="status">Senha alterada com sucesso.</p>
+{% elif msg == 'excluido' %}
+<p class="flash flash--ok" role="status">Usuário excluído.</p>
+{% elif msg == 'erro_self_delete' %}
+<p class="flash flash--warn" role="status">Você não pode excluir sua própria conta.</p>
+{% endif %}
+
+<div class="card">
+  <table class="table">
+    <thead>
+      <tr>
+        <th>Usuário</th>
+        <th>Perfil</th>
+        <th>Estado</th>
+        <th>Ações</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for u in users %}
+      <tr>
+        <td>{{ u.username }}</td>
+        <td>{{ role_labels.get(u.role, u.role) }}</td>
+        <td>
+          {% if u.is_active %}
+          <span class="badge badge--ok">Ativo</span>
+          {% else %}
+          <span class="badge badge--idle">Inativo</span>
+          {% endif %}
+        </td>
+        <td class="actions">
+          <a class="button button--ghost" href="/users/{{ u.id }}/edit">Editar</a>
+          <a class="button button--ghost" href="/users/{{ u.id }}/password">Senha</a>
+          {% if u.id != request.state.user.id %}
+          <a class="button button--ghost button--danger" href="/users/{{ u.id }}/delete">Excluir</a>
+          {% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

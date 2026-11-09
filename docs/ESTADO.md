@@ -1,31 +1,50 @@
 # Estado do projeto
 
-**Atualizado em 2026-11-04** · Versão atual: **v0.1.0** · Próxima etapa: **E2 — Acesso e cadastro**
+**Atualizado em 2026-11-09** · Versão atual: **v0.6.0** · Próxima etapa: **E7.3 — Retenção automática** (bloqueada até P-06)
 
 ## 1. Resumo
 
-As etapas E0 (especificação) e E1 (fundação e base visual) estão concluídas. O sistema sobe, valida configuração, aplica migrações, responde a health checks e exibe a casca do dashboard. Ainda não há login, cadastro de switches nem coleta.
+E2 a E6.1 e E7.1–E7.2 estão concluídas. O sistema tem login, perfis (admin/operator/reader), cadastro de switches e credenciais cifradas, coleta Netmiko (generic e MikroTik RouterOS), agendamento configurável, histórico de ciclos, restore por data e dashboard de saúde com SVG gerado no servidor.
 
-A partir de 2026-11-05 o desenvolvimento passa para uma VM local (ADR-013). O servidor de produção só recebe versões marcadas.
+E6 (piloto real) está bloqueada aguardando informações do cliente (P-01 a P-04).
+
+A partir de 2026-11-05 o desenvolvimento ocorre em VM local (ADR-013). O servidor de produção ainda está em **v0.1.0** (sem login) — implantação de v0.6.0 requer aprovação explícita (portões G-1, G-2, G-3).
 
 ## 2. Etapas
 
-| Etapa | Situação | Referência |
-| --- | --- | --- |
-| E0 — Especificação base | Concluída | PRD v2.0, `PLANO.md`, ADR-001 a 013 |
-| E1 — Fundação e base visual | Concluída (v0.1.0) | [`specs/E1-fundacao.md`](specs/E1-fundacao.md), evidências na seção 7 |
-| E2 — Acesso e cadastro | **Próxima**: escrever a spec | Escopo no `PLANO.md` |
-| E3 a E7 | Não iniciadas | `PLANO.md` |
+| Etapa | Versão | Situação | Referência |
+| --- | --- | --- | --- |
+| E0 — Especificação base | — | Concluída | PRD v2.0, `PLANO.md`, ADR-001 a 013 |
+| E1 — Fundação e base visual | v0.1.0 | Concluída | [`specs/E1-fundacao.md`](specs/E1-fundacao.md) |
+| E2 — Acesso e cadastro | v0.2.0 | Concluída | [`specs/E2-acesso-e-cadastro.md`](specs/E2-acesso-e-cadastro.md) |
+| E2.1 — Usuários e perfil Operador | v0.6.0 | Concluída | [`specs/E2-acesso-e-cadastro.md`](specs/E2-acesso-e-cadastro.md) |
+| E2.2 — Tipos de dispositivo | v0.6.0 | Concluída | [`specs/E2.2-tipos-de-dispositivo.md`](specs/E2.2-tipos-de-dispositivo.md) |
+| E2.3 — Agendamento configurável | v0.6.0 | Concluída | [`specs/E2.3-agendamento-configuravel.md`](specs/E2.3-agendamento-configuravel.md) |
+| E3 — Coleta de configuração | v0.3.0 | Concluída | [`specs/E3-coleta.md`](specs/E3-coleta.md) |
+| E4 — Agendamento e histórico | v0.4.0 | Concluída | [`specs/E4-agendamento-e-historico.md`](specs/E4-agendamento-e-historico.md) |
+| E5 — Dashboard de saúde | v0.5.0 | Concluída | [`specs/E5-dashboard.md`](specs/E5-dashboard.md) |
+| E6 — Piloto com switch real | — | **Bloqueada** (P-01, P-02, P-03, P-04) | [`specs/E6-piloto.md`](specs/E6-piloto.md) |
+| E6.1 — Driver MikroTik RouterOS | v0.6.0 | Concluída | [`specs/E6.1-driver-mikrotik.md`](specs/E6.1-driver-mikrotik.md) |
+| E7 — Operação | — | Não iniciada | [`specs/E7-operacao.md`](specs/E7-operacao.md) |
+| E7.1 — Histórico de ciclos | v0.6.0 | Concluída | [`specs/E7.1-historico-coletas.md`](specs/E7.1-historico-coletas.md) |
+| E7.2 — Restore por data | v0.6.0 | Concluída | [`specs/E7.2-restore.md`](specs/E7.2-restore.md) |
 
-## 3. O que existe no código (v0.1.0)
+## 3. O que existe no código (v0.6.0)
 
-- Comandos `serve`, `migrate`, `check-config`, `init-secrets`.
-- Configuração `BLC_*` com segredos em arquivo, validada na subida.
+- Comandos `serve`, `migrate`, `check-config`, `init-secrets`, `create-admin`.
+- Configuração `BLC_*` com segredos em arquivo; `BLC_TIMEZONE` e `BLC_MAX_CONCURRENT`.
 - Logs JSON com máscara de segredos; tabela `events` com detalhe mascarado.
-- SQLite (WAL) + Alembic; migração `0001` (tabela `events`).
-- `/health/live`, `/health/ready`; página inicial com estados de saúde (zerados) e estado da plataforma.
-- CSS próprio, tema claro e escuro, nenhum JavaScript (CSP `script-src 'none'`).
-- Container não root, raiz somente leitura, 512 MB; 31 testes.
+- SQLite (WAL) + Alembic; migrações v0001–v0005.
+- `/health/live`, `/health/ready`; dashboard com SVG, auto-refresh, sparklines.
+- Login Argon2id, sessões com expiração, CSRF HMAC-SHA256, perfis admin/operator/reader.
+- CRUD de switches (generic + mikrotik_routeros) e credenciais Fernet.
+- Coleta Netmiko com verificação de chave SSH, validação, deduplicação SHA-256, diff.
+- Agendamento APScheduler com retentativas e recuperação pós-restart.
+- Agendamento configurável via UI (`/settings`).
+- Histórico de ciclos (`/history`) com detalhe, filtro e paginação.
+- Restore por data (`/devices/{id}/restore`).
+- CSS próprio, tema claro/escuro, nenhum JavaScript (CSP `script-src 'none'`).
+- Container não root, raiz somente leitura, 512 MB; 216 testes.
 
 ## 4. Produção (situação em 2026-11-04)
 
@@ -54,22 +73,17 @@ A partir de 2026-11-05 o desenvolvimento passa para uma VM local (ADR-013). O se
 
 | Item | Ação recomendada | Quando |
 | --- | --- | --- |
-| Produção exposta em HTTP, sem login | Implantar a E2 (login obrigatório). Até lá, considerar `BLC_BIND=127.0.0.1` | E2 |
-| Sem TLS | Proxy reverso ou certificado na aplicação (nova ADR) | Antes da E6 |
-| Host sem firewall; Docker ignora ufw | Regras na cadeia `DOCKER-USER` ou firewall de rede (G-3) | Antes da E6 |
+| Produção em v0.1.0 (sem login, HTTP) | Implantar v0.6.0 pelo runbook (G-1, G-2, G-3) | Com aprovação |
+| Sem TLS | Proxy reverso ou certificado (nova ADR) | Antes da E6 real |
+| Host sem firewall; Docker ignora ufw | Regras na cadeia `DOCKER-USER` ou firewall de rede | Antes da E6 |
 | Cópia da `master_key` | Guardar fora do servidor, separada dos dados | Agora |
-| Servidor de produção com chave SSH de **push** no GitHub (root) | Trocar por *deploy key* somente leitura | Antes da próxima implantação |
-| Aviso de depreciação `httpx` no `TestClient` (Starlette 1.9) | Avaliar `httpx2` ao atualizar dependências | Próxima atualização |
+| Chave SSH de push no GitHub (root) | Trocar por deploy key somente leitura | Antes da próxima implantação |
+| Aviso de depreciação `httpx` no TestClient | Avaliar `httpx2` ao atualizar dependências | Próxima atualização |
 
 ## 7. Próximos passos
 
-1. Montar a VM de desenvolvimento ([`DESENVOLVIMENTO.md`](DESENVOLVIMENTO.md)) e rodar `scripts/check.sh`.
-2. Escrever a spec da **E2**, para aprovação:
-   - login com usuários locais, senha com Argon2 e política mínima;
-   - sessão no servidor com expiração por inatividade e logout que a invalida;
-   - bloqueio após falhas consecutivas;
-   - perfis Admin e Leitura com autorização no backend (CA-09) e proteção CSRF nos formulários;
-   - credenciais cifradas com Fernet (chave mestra) e cadastro de switches (F-01, F-02);
-   - registro de eventos (F-11); primeiro administrador criado pelo CLI.
-3. Implementar e verificar a E2 na VM; gerar `v0.2.0`.
-4. Implantar a `v0.2.0` em produção pelo runbook, com aprovação.
+1. **Push para o GitHub** (G-1): `git push origin main --follow-tags`.
+2. **Implantar v0.6.0** em produção pelo runbook (G-1, G-2, G-3) — com aprovação explícita.
+3. **E7.3 — Retenção automática**: job diário, `BLC_RETENTION_DAYS=365`, preserva última versão (aguarda P-06).
+4. **E7.4 — Runbooks**: `docs/runbooks/instalacao.md` atualizado; `docs/runbooks/backup-dados.md` novo.
+5. **E6 real** (bloqueada): aguardar P-01 (fabricantes/modelos), P-02 (conta SSH), P-03 (rede/TLS), P-04 (horário).

@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% block title %}Configurações{% endblock %}
+{% block content %}
+<section class="page-head">
+  <div>
+    <p class="eyebrow">Administração</p>
+    <h1>Configurações</h1>
+  </div>
+</section>
+
+{% if msg == 'salvo' %}
+<p class="flash flash--ok" role="status">Agendamento salvo com sucesso.</p>
+{% endif %}
+
+{% if errors is defined and errors %}
+<ul class="flash flash--error" role="alert">
+  {% for e in errors %}<li>{{ e }}</li>{% endfor %}
+</ul>
+{% endif %}
+
+<div class="card">
+  <div class="card__head"><h2>Agendamento da coleta automática</h2></div>
+  <form method="post" action="/settings">
+    <input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}">
+
+    <div class="form__group">
+      <label class="form__label">Agendamento atual</label>
+      <code>{{ cron }}</code>
+      {% if next_run %}
+      <p class="muted">Próxima execução: <strong>{{ next_run.strftime('%d/%m/%Y %H:%M') }} UTC</strong></p>
+      {% else %}
+      <p class="muted">Próxima execução não disponível.</p>
+      {% endif %}
+    </div>
+
+    <div class="form__group">
+      <p class="flash flash--info" role="note">
+        Fuso configurado: <strong>{{ timezone }}</strong>.
+        O horário informado será interpretado nesse fuso.
+      </p>
+    </div>
+
+    <div class="form__row">
+      <div class="form__group">
+        <label class="form__label" for="hour">Hora</label>
+        <select class="form__input" id="hour" name="hour">
+          {% for h in hours %}
+          <option value="{{ h }}"{% if h == current_hour %} selected{% endif %}>{{ '%02d' | format(h) }}h</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="form__group">
+        <label class="form__label" for="minute">Minuto</label>
+        <select class="form__input" id="minute" name="minute">
+          {% for m in minutes %}
+          <option value="{{ m }}"{% if m == current_minute %} selected{% endif %}>:{{ '%02d' | format(m) }}</option>
+          {% endfor %}
+        </select>
+      </div>
+    </div>
+
+    <div class="form__actions">
+      <button class="button" type="submit">Salvar</button>
+    </div>
+  </form>
+</div>
+{% endblock %}

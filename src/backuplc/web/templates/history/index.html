@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+{% block title %}Histórico de Coletas{% endblock %}
+{% block content %}
+<section class="page-head">
+  <div>
+    <p class="eyebrow">Monitoramento</p>
+    <h1>Histórico de Coletas</h1>
+  </div>
+</section>
+
+<div class="card">
+  <div class="card__head">
+    <h2>Ciclos de coleta</h2>
+    <form method="get" action="/history" class="actions">
+      <select class="form__input" name="trigger">
+        <option value=""{% if not trigger_filter %} selected{% endif %}>Todos</option>
+        <option value="scheduled"{% if trigger_filter == 'scheduled' %} selected{% endif %}>Agendados</option>
+        <option value="manual"{% if trigger_filter == 'manual' %} selected{% endif %}>Manuais</option>
+      </select>
+      <button class="button button--ghost button--sm" type="submit">Filtrar</button>
+    </form>
+  </div>
+
+  {% if cycles %}
+  <table class="table">
+    <thead>
+      <tr>
+        <th>Data / Hora</th>
+        <th>Origem</th>
+        <th>Dispositivos</th>
+        <th>Concluídos</th>
+        <th>Falhas</th>
+        <th>Em andamento</th>
+        <th>Duração</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for c in cycles %}
+      <tr>
+        <td>{{ c.started_at.strftime('%d/%m/%Y %H:%M') }} <span class="muted">UTC</span></td>
+        <td>
+          {% if c.trigger == 'scheduled' %}
+          <span class="badge badge--idle">Agendado</span>
+          {% else %}
+          <span class="badge badge--running">Manual</span>
+          {% endif %}
+        </td>
+        <td>{{ c.total }}</td>
+        <td>
+          {% if c.ok_count > 0 %}
+          <span class="badge badge--ok">{{ c.ok_count }}</span>
+          {% else %}
+          <span class="muted">0</span>
+          {% endif %}
+        </td>
+        <td>
+          {% if c.fail_count > 0 %}
+          <span class="badge badge--error">{{ c.fail_count }}</span>
+          {% else %}
+          <span class="muted">0</span>
+          {% endif %}
+        </td>
+        <td>
+          {% if c.running_count > 0 %}
+          <span class="badge badge--running">{{ c.running_count }}</span>
+          {% else %}
+          <span class="muted">0</span>
+          {% endif %}
+        </td>
+        <td class="muted">
+          {% if c.duration_seconds is not none %}
+            {% if c.duration_seconds >= 60 %}
+              {{ (c.duration_seconds // 60) }}m {{ (c.duration_seconds % 60) }}s
+            {% else %}
+              {{ c.duration_seconds }}s
+            {% endif %}
+          {% else %}
+            —
+          {% endif %}
+        </td>
+        <td>
+          <a href="/history/detail?key={{ c.cycle_key }}&trigger={{ c.trigger }}" class="button button--ghost button--sm">Ver</a>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  {% if total_pages > 1 %}
+  <div class="pagination">
+    {% if page > 1 %}
+    <a href="/history?page={{ page - 1 }}{% if trigger_filter %}&trigger={{ trigger_filter }}{% endif %}" class="button button--ghost button--sm">← Anterior</a>
+    {% endif %}
+    <span class="muted">Página {{ page }} de {{ total_pages }}</span>
+    {% if page < total_pages %}
+    <a href="/history?page={{ page + 1 }}{% if trigger_filter %}&trigger={{ trigger_filter }}{% endif %}" class="button button--ghost button--sm">Próxima →</a>
+    {% endif %}
+  </div>
+  {% endif %}
+
+  {% else %}
+  <div class="empty-state">
+    <p class="muted">Nenhuma coleta registrada ainda.</p>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

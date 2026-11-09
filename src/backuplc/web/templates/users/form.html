@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% block title %}{% if editing %}Editar usuário{% else %}Novo usuário{% endif %}{% endblock %}
+{% block content %}
+<section class="page-head">
+  <div>
+    <p class="eyebrow">Usuários</p>
+    <h1>{% if editing %}Editar: {{ user.username }}{% else %}Novo usuário{% endif %}</h1>
+  </div>
+  <a class="button button--ghost" href="/users">Voltar</a>
+</section>
+
+{% for e in errors %}
+<p class="flash flash--error" role="alert">{{ e }}</p>
+{% endfor %}
+
+<div class="card">
+  <form method="post" action="{% if editing %}/users/{{ user.id }}/edit{% else %}/users/new{% endif %}">
+    <input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}">
+
+    <div class="form__group">
+      <label class="form__label" for="username">Nome de usuário</label>
+      <input class="form__input" type="text" id="username" name="username"
+             value="{{ user.username if user else '' }}" required autocomplete="off">
+    </div>
+
+    <div class="form__group">
+      <label class="form__label" for="role">Perfil</label>
+      <select class="form__input" id="role" name="role">
+        {% for value, label in roles %}
+        <option value="{{ value }}" {% if user and user.role == value %}selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+      </select>
+    </div>
+
+    {% if editing %}
+    <div class="form__group form__group--check">
+      <input type="checkbox" id="is_active" name="is_active" value="1"
+             {% if user.is_active %}checked{% endif %}>
+      <label class="form__label" for="is_active">Conta ativa</label>
+    </div>
+    {% endif %}
+
+    {% if not editing %}
+    <div class="form__group">
+      <label class="form__label" for="password">Senha</label>
+      <input class="form__input" type="password" id="password" name="password"
+             autocomplete="new-password" required>
+      <small class="muted">Mínimo 12 caracteres, com maiúscula, minúscula e número.</small>
+    </div>
+    {% endif %}
+
+    <div class="form__actions">
+      <button class="button" type="submit">{% if editing %}Salvar{% else %}Criar usuário{% endif %}</button>
+      <a class="button button--ghost" href="/users">Cancelar</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

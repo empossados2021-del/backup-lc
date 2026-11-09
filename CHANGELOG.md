@@ -13,6 +13,55 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/); 
 - `scripts/init.sh` lê o `.env` do repositório, permitindo caminhos de desenvolvimento.
 - Removido o nome de usuário do servidor dos exemplos da documentação.
 
+## [0.6.0] — 2026-11-09 — E2.1, E2.2, E2.3, E6.1, E7.1, E7.2
+
+### Adicionado
+- **Perfil Operador** (`operator`): 3 papéis (admin/operator/reader); gestão de usuários pela UI (`/users`).
+- **Tipos de dispositivo**: `generic` e `mikrotik_routeros`; página `/mikrotik` separada na nav.
+- **Driver MikroTik RouterOS**: Netmiko `mikrotik_routeros`; pré-comando desabilita paginação; `/export`; captura `ReadTimeout`.
+- **Agendamento configurável** (`/settings`): UI hora/minuto; reprograma APScheduler em tempo real; fuso configurável via `BLC_TIMEZONE` (padrão `America/Sao_Paulo`).
+- **Histórico de ciclos** (`/history`): ciclos por minuto, filtro por origem (manual/agendado), detalhe com badges de estado.
+- **Restore por data** (`/devices/{id}/restore`): busca versão por data UTC, download direto.
+- **Migração v0005**: tabela `app_settings` para configurações persistentes.
+- 185 testes novos (total 216: unit, integration, security).
+
+### Corrigido
+- `triggered_by` passava username em vez de user ID (FK para `users.id`).
+- Validação de username vazio no formulário de novo usuário.
+- Proteção contra auto-desativação de conta no formulário de edição.
+
+## [0.5.0] — 2026-11-08 — E5 Dashboard de saúde
+
+### Adicionado
+- Módulo `backuplc.dashboard`: cálculo de saúde por dispositivo, sparkline SVG e donut SVG gerados no servidor.
+- Dashboard real em `/` com 4 cards de estado, tabela de dispositivos, gráficos SVG e auto-refresh a cada 60 s.
+
+## [0.4.0] — 2026-11-08 — E4 Agendamento e histórico
+
+### Adicionado
+- Módulo `backuplc.scheduler`: `AsyncIOScheduler` (APScheduler) com lifespan, retentativas automáticas (máx. 3), semáforo de concorrência, recuperação de execuções travadas na subida.
+- Coleta de todos os dispositivos ativos (`/devices/collect-all`, `/mikrotik/collect-all`) com fire-and-forget assíncrono.
+- Histórico de execuções; detalhe por ciclo com duração e badges de estado.
+
+## [0.3.0] — 2026-11-07 — E3 Coleta de configuração
+
+### Adicionado
+- Módulo `backuplc.collector`: driver genérico e MikroTik (`DriverSpec`), runner (`collect_device`), verificação de chave de host SSH, validação de saída (tamanho mínimo, padrões de erro, marcador de fim).
+- Módulo `backuplc.storage`: `save_config` com deduplicação por SHA-256, diff unificado no servidor, download de versões.
+- Migração `v0004`: tabelas `config_versions`, `device_host_keys`, `executions`.
+- Rota `/devices/{id}/collect` (POST); endpoint de download e diff de versões.
+
+## [0.2.0] — 2026-11-06 — E2 Acesso e cadastro
+
+### Adicionado
+- Módulo `backuplc.auth`: usuários locais com Argon2id, sessões no banco com expiração por inatividade, CSRF por HMAC-SHA256, perfis admin/reader, bloqueio após falhas consecutivas.
+- Módulo `backuplc.devices`: cadastro de switches (Device) e credenciais cifradas com Fernet (Credential).
+- Migrações `v0002` (usuários e sessões) e `v0003` (credenciais e dispositivos).
+- Login (`/login`), logout e proteção de todas as rotas por `AuthMiddleware`.
+- CRUD de switches (`/devices`) e credenciais (`/credentials`).
+- Comando CLI `create-admin` para criar o primeiro administrador.
+- Cabeçalho `Cache-Control: no-store` em respostas HTML.
+
 ## [0.1.0] — 2026-11-04 — E1 Fundação e base visual
 
 ### Adicionado
