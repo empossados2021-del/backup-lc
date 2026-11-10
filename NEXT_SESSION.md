@@ -49,7 +49,7 @@ A URL SSH está configurada em `.git/config` como `git@github-empossados:empossa
 
 ### E7.4 — Runbooks
 - `docs/runbooks/instalacao.md` atualizado: `.env` com `BLC_RETENTION_DAYS`, recuperação de desastre, checklist de segurança
-- `docs/runbooks/backup-dados.md` novo: `sqlite3 .backup` + `rsync`, alternativas LVM/ZFS, cron sugerido
+- `docs/runbooks/backup-dados.md` novo: `sqlite3 .backup` + `rsync`, alternativas LVM/ZFS, cron sugerido, script de referência
 
 ### UX — Redesign denso/técnico
 - Login split-screen: painel escuro com branding + painel claro com formulário
@@ -63,7 +63,13 @@ A URL SSH está configurada em `.git/config` como `git@github-empossados:empossa
 ## 4. Próximas tarefas
 
 ### 4.1 Desbloqueadas agora
-- **Implantar v0.7.0** em produção pelo runbook (G-1 → G-2 → G-3)
+- **Implantar v0.7.0** em produção (G-1 concluído — tag no GitHub; falta G-2 e G-3 no servidor):
+  ```bash
+  git -C /opt/backup-lc fetch --tags
+  git -C /opt/backup-lc checkout v0.7.0
+  docker compose -f /opt/backup-lc/compose.yaml up -d --build   # G-2 se baixar pacotes
+  curl http://localhost:8080/health/ready                         # G-3 já aberto
+  ```
 - Trocar chave SSH de push (root) por deploy key somente leitura
 
 ### 4.2 Bloqueadas (aguardam cliente)
