@@ -14,37 +14,47 @@
   {% endif %}
 </section>
 
-<section class="hero-grid" aria-label="Resumo">
-  <article class="card hero">
-    {{ donut_svg | safe }}
-    <div class="hero__text">
-      <h2>Switches saudáveis</h2>
-      <p class="muted">Percentual de switches ativos com backup válido nas últimas 26 horas.</p>
+<section class="grid-4" aria-label="Resumo">
+
+  <article class="card dash-health">
+    <div class="dash-health__chart">{{ donut_svg | safe }}</div>
+    <div class="dash-health__info">
+      <h2>Saúde geral</h2>
+      <p class="stat__value">{{ dash.devices | length }}</p>
+      <p class="muted">dispositivo(s) monitorado(s)</p>
     </div>
   </article>
 
-  <div class="stats dash-statusbar">
-    <article class="card stat stat--healthy">
-      <p class="stat__label"><span class="dot" aria-hidden="true"></span>Saudável</p>
-      <p class="stat__value">{{ dash.counts.get('healthy', 0) }}</p>
-      <p class="stat__hint">Backup válido em menos de 26 h</p>
-    </article>
-    <article class="card stat stat--attention">
+  <article class="card stat stat--healthy">
+    <p class="stat__label"><span class="dot" aria-hidden="true"></span>Saudável</p>
+    <p class="stat__value">{{ dash.counts.get('healthy', 0) }}</p>
+    <p class="stat__hint">Backup válido em menos de 26 h</p>
+  </article>
+
+  <article class="card card--stacked">
+    <div class="stat stat--attention">
       <p class="stat__label"><span class="dot" aria-hidden="true"></span>Atenção</p>
       <p class="stat__value">{{ dash.counts.get('attention', 0) }}</p>
       <p class="stat__hint">Última falhou ou 26 a 48 h</p>
-    </article>
-    <article class="card stat stat--critical">
+    </div>
+    <div class="stat stat--critical stat--stacked">
       <p class="stat__label"><span class="dot" aria-hidden="true"></span>Crítico</p>
       <p class="stat__value">{{ dash.counts.get('critical', 0) }}</p>
       <p class="stat__hint">Mais de 48 h ou nunca</p>
-    </article>
-    <article class="card stat stat--inactive">
-      <p class="stat__label"><span class="dot" aria-hidden="true"></span>Inativo</p>
-      <p class="stat__value">{{ dash.counts.get('inactive', 0) }}</p>
-      <p class="stat__hint">Fora da coleta</p>
-    </article>
-  </div>
+    </div>
+  </article>
+
+  <article class="card stat stat--inactive">
+    <p class="stat__label"><span class="dot" aria-hidden="true"></span>Inativo</p>
+    <p class="stat__value">{{ dash.counts.get('inactive', 0) }}</p>
+    <p class="stat__hint">Fora da coleta</p>
+    {% if dash.devices %}
+    <p class="stat__hint">
+      <span class="badge badge--idle">{{ (dash.counts.get('inactive', 0) / dash.devices | length * 100) | round(0) | int }}%</span>
+    </p>
+    {% endif %}
+  </article>
+
 </section>
 
 {% if dash.devices %}

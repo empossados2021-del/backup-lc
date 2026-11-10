@@ -860,21 +860,28 @@ def devices_diff(device_id: str, older_id: str, newer_id: str, request: Request)
     )
 
 
-@router.get("/devices/{device_id}/restore", response_class=HTMLResponse)
-def devices_restore(device_id: str, request: Request, date: str = "") -> HTMLResponse:
+@router.get("/restore", response_class=HTMLResponse)
+def restore_index(request: Request, device: str = "", date: str = "") -> HTMLResponse:
     from backuplc.collector.service import list_versions_by_date
-    from backuplc.devices.service import get_device
+    from backuplc.devices.service import get_device, list_devices
 
     db = request.app.state.db
-    device = get_device(db, device_id)
-    if device is None:
-        raise HTTPException(status_code=404)
+    all_devices = list_devices(db)
+
+    selected_device = None
+    selected_date_fmt = ""
+
+    if device:
+        selected_device = get_device(db, device)
+        if selected_device is None:
+            device = ""
 
     today = datetime.now(UTC).strftime("%Y-%m-%d")
-    versions = []
-    selected_date_fmt = ""
-    if date:
-        versions = list_versions_by_date(db, device_id, date)
+
+    versions = (
+        list_versions_by_date(db, selected_device.id, date) if selected_device and date else []
+    )
+    if selected_device and date:
         try:
             dt = datetime.strptime(date, "%Y-%m-%d")
             selected_date_fmt = dt.strftime("%d/%m/%Y")
@@ -883,16 +890,23 @@ def devices_restore(device_id: str, request: Request, date: str = "") -> HTMLRes
 
     return _t(
         request,
-        "devices/restore.html",
+        "restore/index.html",
         {
-            "active": "devices",
-            "device": device,
+            "active": "restore",
+            "all_devices": all_devices,
+            "selected_device": selected_device,
             "selected_date": date,
             "selected_date_fmt": selected_date_fmt,
             "today": today,
             "versions": versions,
         },
     )
+
+
+@router.get("/devices/{device_id}/restore")
+def devices_restore(device_id: str, request: Request) -> Response:
+    """Redireciona URLs antigas para a nova página centralizada de restore."""
+    return RedirectResponse(f"/restore?device={device_id}", status_code=301)
 
 
 @router.post("/devices/{device_id}/reset-host-key")

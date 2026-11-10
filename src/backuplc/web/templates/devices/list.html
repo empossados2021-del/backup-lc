@@ -42,13 +42,13 @@
         <th>Porta SSH</th>
         <th>Credencial</th>
         <th>Estado</th>
-        {% if request.state.user.role == 'admin' %}<th>Ações</th>{% endif %}
+        <th>Ações</th>
       </tr>
     </thead>
     <tbody>
       {% for d in devices %}
       <tr>
-        <td>{{ d.name }}</td>
+        <td><a href="/devices/{{ d.id }}">{{ d.name }}</a></td>
         <td>{{ d.ip_address }}</td>
         <td>{{ d.device_type }}</td>
         <td>{{ d.ssh_port }}</td>
@@ -60,12 +60,13 @@
           <span class="badge badge--idle">Inativo</span>
           {% endif %}
         </td>
-        {% if request.state.user.role == 'admin' %}
         <td class="actions">
+          <a class="button button--ghost button--sm" href="/restore?device={{ d.id }}">Restore</a>
+          {% if request.state.user.role == 'admin' %}
           <a href="/devices/{{ d.id }}/edit">Editar</a>
-          <a class="button button--ghost button--danger" href="/devices/{{ d.id }}/delete">Excluir</a>
+          <a class="button button--ghost button--danger button--sm" href="/devices/{{ d.id }}/delete">Excluir</a>
+          {% endif %}
         </td>
-        {% endif %}
       </tr>
       {% endfor %}
     </tbody>

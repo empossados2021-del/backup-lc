@@ -108,14 +108,14 @@ def test_list_versions_by_date_data_invalida(db: Database, secrets: object) -> N
 
 @pytest.mark.integration
 def test_restore_get_sem_data(admin_client: object, db: Database, secrets: object) -> None:
-    """GET /devices/{id}/restore sem parâmetro → 200, campo de data visível."""
+    """GET /restore?device={id} sem data → 200, campo de data visível."""
     from fastapi.testclient import TestClient
 
     assert isinstance(admin_client, TestClient)
     upgrade(db)
     device_id = _make_device(db, secrets, suffix="10")
 
-    r = admin_client.get(f"/devices/{device_id}/restore")
+    r = admin_client.get(f"/restore?device={device_id}")
     assert r.status_code == 200
     assert 'type="date"' in r.text
     assert "Verificar" in r.text
@@ -123,14 +123,14 @@ def test_restore_get_sem_data(admin_client: object, db: Database, secrets: objec
 
 @pytest.mark.integration
 def test_restore_sem_autenticacao(client: object, db: Database, secrets: object) -> None:
-    """GET /devices/{id}/restore sem sessão → redirect /login."""
+    """GET /restore sem sessão → redirect /login."""
     from fastapi.testclient import TestClient
 
     assert isinstance(client, TestClient)
     upgrade(db)
     device_id = _make_device(db, secrets, suffix="11")
 
-    r = client.get(f"/devices/{device_id}/restore")
+    r = client.get(f"/restore?device={device_id}")
     assert r.status_code == 302
     assert "/login" in r.headers["location"]
 
@@ -161,7 +161,7 @@ def test_restore_com_backup(
     ver_path.parent.mkdir(parents=True, exist_ok=True)
     ver_path.write_text("config content")
 
-    r = admin_client.get(f"/devices/{device_id}/restore?date=2026-11-06")
+    r = admin_client.get(f"/restore?device={device_id}&date=2026-11-06")
     assert r.status_code == 200
     assert "Baixar" in r.text
     assert version_id in r.text
@@ -180,7 +180,7 @@ def test_restore_sem_backup(
     upgrade(db)
     device_id = _make_device(db, secrets, suffix="13")
 
-    r = admin_client.get(f"/devices/{device_id}/restore?date=2026-11-06")
+    r = admin_client.get(f"/restore?device={device_id}&date=2026-11-06")
     assert r.status_code == 200
     assert "Nenhum backup encontrado" in r.text
 
@@ -198,5 +198,5 @@ def test_restore_reader(
     upgrade(db)
     device_id = _make_device(db, secrets, suffix="14")
 
-    r = reader_client.get(f"/devices/{device_id}/restore")
+    r = reader_client.get(f"/restore?device={device_id}")
     assert r.status_code == 200

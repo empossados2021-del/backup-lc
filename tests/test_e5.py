@@ -438,7 +438,7 @@ def test_dashboard_contains_statusbar(admin_client: object) -> None:
     """Barra de status deve estar presente no HTML."""
     resp = admin_client.get("/")  # type: ignore[attr-defined]
     assert resp.status_code == 200
-    assert "dash-statusbar" in resp.text
+    assert "grid-4" in resp.text
     assert "saudáveis" in resp.text
 
 

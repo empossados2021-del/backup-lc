@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+{% block title %}Restore{% endblock %}
+{% block content %}
+<section class="page-head">
+  <div>
+    <p class="eyebrow">Operação</p>
+    <h1>Restore / Download</h1>
+  </div>
+</section>
+
+<div class="card">
+  <div class="card__head"><h2>Selecionar backup</h2></div>
+  <form method="get" action="/restore">
+    <div class="form__group">
+      <label class="form__label" for="device">Dispositivo</label>
+      {% if all_devices %}
+      <select class="form__input form__select" id="device" name="device">
+        <option value="">— escolha um dispositivo —</option>
+        {% for d in all_devices %}
+        <option value="{{ d.id }}"{% if selected_device and selected_device.id == d.id %} selected{% endif %}>
+          {{ d.name }} ({{ d.device_type }})
+        </option>
+        {% endfor %}
+      </select>
+      {% else %}
+      <p class="muted">Nenhum dispositivo cadastrado.</p>
+      {% endif %}
+    </div>
+    <div class="form__group">
+      <label class="form__label" for="date">Data do backup (UTC)</label>
+      <input class="form__input restore-date-input"
+             type="date" id="date" name="date"
+             value="{{ selected_date }}" max="{{ today }}">
+    </div>
+    <div class="form__actions">
+      <button class="button" type="submit">Verificar backups</button>
+    </div>
+  </form>
+</div>
+
+{# ── Resultado ── #}
+{% if selected_device and selected_date %}
+<div class="card">
+  <div class="card__head">
+    <h2>{{ selected_device.name }} — {{ selected_date_fmt }}</h2>
+  </div>
+  {% if versions %}
+  <table class="table">
+    <thead>
+      <tr>
+        <th>Horário (UTC)</th>
+        <th>Tamanho</th>
+        <th>SHA-256</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for v in versions %}
+      <tr>
+        <td>{{ v.collected_at.strftime('%H:%M:%S') }}</td>
+        <td class="muted">{{ v.size_bytes }} B</td>
+        <td><code>{{ v.sha256_raw[:8] }}…</code></td>
+        <td>
+          <a class="button button--ghost button--sm"
+             href="/devices/{{ selected_device.id }}/versions/{{ v.id }}/download">
+            Baixar
+          </a>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <div class="empty-state">
+    <p class="muted">Nenhum backup encontrado para {{ selected_date_fmt }}.</p>
+  </div>
+  {% endif %}
+</div>
+{% endif %}
+{% endblock %}
