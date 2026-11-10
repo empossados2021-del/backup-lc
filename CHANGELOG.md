@@ -13,6 +13,22 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/); 
 - `scripts/init.sh` lê o `.env` do repositório, permitindo caminhos de desenvolvimento.
 - Removido o nome de usuário do servidor dos exemplos da documentação.
 
+## [0.6.1] — 2026-11-10 — Redesenho do layout e Restore unificado
+
+### Adicionado
+- **Rota `/restore` unificada**: seleção de dispositivo via `<select>` + filtro por data em uma única página; substitui o `/devices/{id}/restore` por rota.
+- **Botão Restore na listagem de dispositivos** (`/devices`, `/mikrotik`): todos os perfis autenticados veem o link direto para o restore do dispositivo.
+
+### Alterado
+- **Layout completo redesenhado**: topbar escura de 54 px cobrindo toda a largura + sidebar estreita de 64 px com ícones SVG (sem texto visível) + área de conteúdo branca; elimina o overflow de itens no nav.
+- **CSS reescrito** (`app.css`): variáveis `--chrome-bg`, `--sidenav-w`, `--topbar-h`; classes `grid-4`, `dash-health`, `card--stacked`; conjunto completo de classes para gráficos SVG do dashboard; aliases `stat--healthy/attention/critical/inactive`; botões `.button--ghost/--danger/--sm`; responsivo para mobile (<768 px sidebar horizontal).
+- **Dashboard** (`/`): quatro cards horizontais (`grid-4`) com donut, saudáveis, atenção+críticos e inativos.
+- Rota antiga `/devices/{id}/restore` → redirect 301 para `/restore?device={id}`.
+- Versão `0.6.0 → 0.6.1`; cache-bust do CSS atualizado.
+
+### Removido
+- Nenhum comportamento removido; a rota antiga redireciona para a nova.
+
 ## [0.6.0] — 2026-11-09 — E2.1, E2.2, E2.3, E6.1, E7.1, E7.2
 
 ### Adicionado

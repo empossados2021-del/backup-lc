@@ -1,10 +1,10 @@
 # Estado do projeto
 
-**Atualizado em 2026-11-09** · Versão atual: **v0.6.0** · Próxima etapa: **E7.3 — Retenção automática** (bloqueada até P-06)
+**Atualizado em 2026-11-10** · Versão atual: **v0.6.1** · Próxima etapa: **E7.3 — Retenção automática** (bloqueada até P-06)
 
 ## 1. Resumo
 
-E2 a E6.1 e E7.1–E7.2 estão concluídas. O sistema tem login, perfis (admin/operator/reader), cadastro de switches e credenciais cifradas, coleta Netmiko (generic e MikroTik RouterOS), agendamento configurável, histórico de ciclos, restore por data e dashboard de saúde com SVG gerado no servidor.
+E2 a E6.1 e E7.1–E7.2 estão concluídas. O sistema tem login, perfis (admin/operator/reader), cadastro de switches e credenciais cifradas, coleta Netmiko (generic e MikroTik RouterOS), agendamento configurável, histórico de ciclos, restore por data e dashboard de saúde com SVG gerado no servidor. O layout foi completamente redesenhado em v0.6.1: topbar escura, sidebar estreita de ícones e área de conteúdo branca.
 
 E6 (piloto real) está bloqueada aguardando informações do cliente (P-01 a P-04).
 
@@ -28,8 +28,9 @@ A partir de 2026-11-05 o desenvolvimento ocorre em VM local (ADR-013). O servido
 | E7 — Operação | — | Não iniciada | [`specs/E7-operacao.md`](specs/E7-operacao.md) |
 | E7.1 — Histórico de ciclos | v0.6.0 | Concluída | [`specs/E7.1-historico-coletas.md`](specs/E7.1-historico-coletas.md) |
 | E7.2 — Restore por data | v0.6.0 | Concluída | [`specs/E7.2-restore.md`](specs/E7.2-restore.md) |
+| UI — Redesenho do layout | v0.6.1 | Concluída | `CHANGELOG.md` |
 
-## 3. O que existe no código (v0.6.0)
+## 3. O que existe no código (v0.6.1)
 
 - Comandos `serve`, `migrate`, `check-config`, `init-secrets`, `create-admin`.
 - Configuração `BLC_*` com segredos em arquivo; `BLC_TIMEZONE` e `BLC_MAX_CONCURRENT`.
@@ -42,7 +43,8 @@ A partir de 2026-11-05 o desenvolvimento ocorre em VM local (ADR-013). O servido
 - Agendamento APScheduler com retentativas e recuperação pós-restart.
 - Agendamento configurável via UI (`/settings`).
 - Histórico de ciclos (`/history`) com detalhe, filtro e paginação.
-- Restore por data (`/devices/{id}/restore`).
+- Restore por data (`/restore?device={id}`); rota legada `/devices/{id}/restore` → 301.
+- Layout: topbar escura (54 px) + sidebar de ícones SVG (64 px) + área de conteúdo branca; responsivo.
 - CSS próprio, tema claro/escuro, nenhum JavaScript (CSP `script-src 'none'`).
 - Container não root, raiz somente leitura, 512 MB; 216 testes.
 
@@ -82,8 +84,7 @@ A partir de 2026-11-05 o desenvolvimento ocorre em VM local (ADR-013). O servido
 
 ## 7. Próximos passos
 
-1. **Push para o GitHub** (G-1): `git push origin main --follow-tags`.
-2. **Implantar v0.6.0** em produção pelo runbook (G-1, G-2, G-3) — com aprovação explícita.
-3. **E7.3 — Retenção automática**: job diário, `BLC_RETENTION_DAYS=365`, preserva última versão (aguarda P-06).
-4. **E7.4 — Runbooks**: `docs/runbooks/instalacao.md` atualizado; `docs/runbooks/backup-dados.md` novo.
-5. **E6 real** (bloqueada): aguardar P-01 (fabricantes/modelos), P-02 (conta SSH), P-03 (rede/TLS), P-04 (horário).
+1. **Implantar v0.6.1** em produção pelo runbook (G-1, G-2, G-3) — com aprovação explícita.
+2. **E7.3 — Retenção automática**: job diário, `BLC_RETENTION_DAYS=365`, preserva última versão (aguarda P-06).
+3. **E7.4 — Runbooks**: `docs/runbooks/instalacao.md` atualizado; `docs/runbooks/backup-dados.md` novo.
+4. **E6 real** (bloqueada): aguardar P-01 (fabricantes/modelos), P-02 (conta SSH), P-03 (rede/TLS), P-04 (horário).
