@@ -49,12 +49,14 @@ async def scheduler_lifespan(
     cron: str,
     max_concurrent: int,
     timezone: str = "America/Sao_Paulo",
+    retention_days: int = 365,
 ) -> AsyncIterator[object]:
     """Contexto de vida do agendador: recovery + APScheduler."""
     from apscheduler.schedulers.asyncio import AsyncIOScheduler  # type: ignore[import-untyped]
     from apscheduler.triggers.cron import CronTrigger  # type: ignore[import-untyped]
 
     from backuplc.scheduler.runner import run_all_devices
+    from backuplc.storage.retention import run_retention_cleanup
 
     count = recover_running_executions(db)
     if count:
@@ -67,6 +69,14 @@ async def scheduler_lifespan(
         _active_tasks.add(task)
         task.add_done_callback(_active_tasks.discard)
 
+    async def _trigger_retention() -> None:
+        async def _run_retention() -> None:
+            await asyncio.to_thread(run_retention_cleanup, db, data_dir, retention_days)
+
+        task = asyncio.create_task(_run_retention())
+        _active_tasks.add(task)
+        task.add_done_callback(_active_tasks.discard)
+
     from zoneinfo import ZoneInfo
 
     tz = ZoneInfo(timezone)
@@ -74,6 +84,12 @@ async def scheduler_lifespan(
         _trigger_collection,
         CronTrigger.from_crontab(cron, timezone=tz),
         id="run_all_devices",
+        replace_existing=True,
+    )
+    scheduler.add_job(
+        _trigger_retention,
+        CronTrigger(hour=3, minute=0, timezone=tz),
+        id="retention_cleanup",
         replace_existing=True,
     )
     scheduler.start()

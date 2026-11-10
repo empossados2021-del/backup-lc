@@ -59,9 +59,13 @@ def test_login_falha_mensagem_generica(client: TestClient, db: Database) -> None
     resp = client.post("/login", data={"username": "bob", "password": "errada", "next": "/"})
     assert resp.status_code == 200
     # Mensagem genérica — não revela se é usuário ou senha.
-    assert "inválidas" in resp.text.lower()
-    assert "usuário" not in resp.text.lower()
-    assert "senha" not in resp.text.lower()
+    # Extrai apenas o texto do alerta (role="alert") para não confundir com labels do form.
+    alert_start = resp.text.find('role="alert"')
+    alert_end = resp.text.find("</p>", alert_start)
+    alert_text = resp.text[alert_start:alert_end].lower() if alert_start != -1 else ""
+    assert "inválidas" in alert_text
+    assert "usuário" not in alert_text
+    assert "senha" not in alert_text
 
 
 def test_login_usuario_inexistente_mensagem_generica(client: TestClient, db: Database) -> None:

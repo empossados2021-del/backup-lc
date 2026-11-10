@@ -61,6 +61,7 @@ async def _lifespan(app: FastAPI) -> AsyncIterator[None]:
             cron,
             settings.max_concurrent,
             settings.timezone,
+            settings.retention_days,
         ) as scheduler:
             app.state.scheduler = scheduler
             yield

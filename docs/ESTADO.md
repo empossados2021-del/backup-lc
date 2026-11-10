@@ -1,10 +1,10 @@
 # Estado do projeto
 
-**Atualizado em 2026-11-10** · Versão atual: **v0.6.1** · Próxima etapa: **E7.3 — Retenção automática** (bloqueada até P-06)
+**Atualizado em 2026-11-10** · Versão atual: **v0.7.0** · Próxima etapa: **E6 real** (bloqueada) ou **implantação v0.7.0 em produção**
 
 ## 1. Resumo
 
-E2 a E6.1 e E7.1–E7.2 estão concluídas. O sistema tem login, perfis (admin/operator/reader), cadastro de switches e credenciais cifradas, coleta Netmiko (generic e MikroTik RouterOS), agendamento configurável, histórico de ciclos, restore por data e dashboard de saúde com SVG gerado no servidor. O layout foi completamente redesenhado em v0.6.1: topbar escura, sidebar estreita de ícones e área de conteúdo branca.
+E2 a E6.1 e E7.1–E7.3 estão concluídas. O sistema tem login, perfis (admin/operator/reader), cadastro de switches e credenciais cifradas, coleta Netmiko (generic e MikroTik RouterOS), agendamento configurável, histórico de ciclos, restore por data, dashboard de saúde com SVG e retenção automática de backups. O layout (v0.6.1/v0.7.0) é denso e técnico: topbar escura, sidebar com ícones e rótulos, stat cards coloridos, login split-screen.
 
 E6 (piloto real) está bloqueada aguardando informações do cliente (P-01 a P-04).
 
@@ -25,10 +25,12 @@ A partir de 2026-11-05 o desenvolvimento ocorre em VM local (ADR-013). O servido
 | E5 — Dashboard de saúde | v0.5.0 | Concluída | [`specs/E5-dashboard.md`](specs/E5-dashboard.md) |
 | E6 — Piloto com switch real | — | **Bloqueada** (P-01, P-02, P-03, P-04) | [`specs/E6-piloto.md`](specs/E6-piloto.md) |
 | E6.1 — Driver MikroTik RouterOS | v0.6.0 | Concluída | [`specs/E6.1-driver-mikrotik.md`](specs/E6.1-driver-mikrotik.md) |
-| E7 — Operação | — | Não iniciada | [`specs/E7-operacao.md`](specs/E7-operacao.md) |
+| E7 — Operação | — | Em andamento | [`specs/E7-operacao.md`](specs/E7-operacao.md) |
 | E7.1 — Histórico de ciclos | v0.6.0 | Concluída | [`specs/E7.1-historico-coletas.md`](specs/E7.1-historico-coletas.md) |
 | E7.2 — Restore por data | v0.6.0 | Concluída | [`specs/E7.2-restore.md`](specs/E7.2-restore.md) |
-| UI — Redesenho do layout | v0.6.1 | Concluída | `CHANGELOG.md` |
+| E7.3 — Retenção automática | v0.7.0 | Concluída | [`specs/E7-operacao.md`](specs/E7-operacao.md) |
+| E7.4 — Runbooks | v0.7.0 | Concluída | [`runbooks/instalacao.md`](runbooks/instalacao.md), [`runbooks/backup-dados.md`](runbooks/backup-dados.md) |
+| UI — Melhorias de UX e redesign | v0.7.0 | Concluída | `CHANGELOG.md` |
 
 ## 3. O que existe no código (v0.6.1)
 
@@ -46,7 +48,8 @@ A partir de 2026-11-05 o desenvolvimento ocorre em VM local (ADR-013). O servido
 - Restore por data (`/restore?device={id}`); rota legada `/devices/{id}/restore` → 301.
 - Layout: topbar escura (54 px) + sidebar de ícones SVG (64 px) + área de conteúdo branca; responsivo.
 - CSS próprio, tema claro/escuro, nenhum JavaScript (CSP `script-src 'none'`).
-- Container não root, raiz somente leitura, 512 MB; 216 testes.
+- Retenção automática diária (`BLC_RETENTION_DAYS=365`); job às 03:00 no fuso configurado.
+- Container não root, raiz somente leitura, 512 MB; 222 testes.
 
 ## 4. Produção (situação em 2026-11-04)
 
@@ -84,7 +87,7 @@ A partir de 2026-11-05 o desenvolvimento ocorre em VM local (ADR-013). O servido
 
 ## 7. Próximos passos
 
-1. **Implantar v0.6.1** em produção pelo runbook (G-1, G-2, G-3) — com aprovação explícita.
-2. **E7.3 — Retenção automática**: job diário, `BLC_RETENTION_DAYS=365`, preserva última versão (aguarda P-06).
-3. **E7.4 — Runbooks**: `docs/runbooks/instalacao.md` atualizado; `docs/runbooks/backup-dados.md` novo.
-4. **E6 real** (bloqueada): aguardar P-01 (fabricantes/modelos), P-02 (conta SSH), P-03 (rede/TLS), P-04 (horário).
+1. **Implantar v0.7.0** em produção pelo runbook (G-1, G-2, G-3) — com aprovação explícita.
+2. **E6 real** (bloqueada): aguardar P-01 (fabricantes/modelos), P-02 (conta SSH), P-03 (rede/TLS), P-04 (horário).
+3. Trocar chave SSH de push (root) por deploy key somente leitura antes da próxima implantação.
+4. Adicionar TLS (proxy reverso ou certificado) antes da E6 real.

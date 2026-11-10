@@ -13,6 +13,29 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/); 
 - `scripts/init.sh` lê o `.env` do repositório, permitindo caminhos de desenvolvimento.
 - Removido o nome de usuário do servidor dos exemplos da documentação.
 
+## [0.7.0] — 2026-11-10 — E7.3 Retenção automática, E7.4 Runbooks e melhorias de UX
+
+### Adicionado
+- **E7.3 — Retenção automática** (`storage/retention.py`): job diário às 03:00 (fuso `BLC_TIMEZONE`) remove `ConfigVersion` com mais de `BLC_RETENTION_DAYS` dias; preserva sempre a versão mais recente por dispositivo; remove arquivo físico apenas quando nenhuma outra versão referencia o mesmo `sha256_raw` (deduplicação reversa). `BLC_RETENTION_DAYS=0` desabilita a limpeza. 6 novos testes (total 222).
+- **`BLC_RETENTION_DAYS`** — nova variável de configuração (`int`, padrão `365`, `ge=0`).
+- **`docs/runbooks/backup-dados.md`** — novo runbook: cópia atômica do banco SQLite + diretório `configs/` com `sqlite3 .backup` + `rsync --checksum`, alternativas LVM/ZFS, frequência recomendada, verificação de integridade e aviso sobre separação do `master_key`.
+
+### Alterado
+- **Login redesenhado** — layout split-screen: painel escuro à esquerda com logo, tagline e lista de funcionalidades; formulário à direita. Labels "Usuário" / "Senha" (antes "Login" / "Acesso").
+- **Dashboard** — cards de status com fundo colorido por estado (verde/amarelo/vermelho/cinza); números de stat maiores (2,5 rem).
+- **Tabelas** — cabeçalho com fundo `--surface-2` e `border-bottom` mais forte; padding reduzido (8 px × 12 px).
+- **Cabeçalho de página** (`.page-head`) — tratamento de card com borda e sombra.
+- **Sidebar** — rótulo de texto abaixo de cada ícone no desktop; layout horizontal preservado no mobile.
+- **Botão primário** — `box-shadow` e `brightness` no hover.
+- **`docs/runbooks/instalacao.md`** — atualizado para v0.7.0: removida nota "sem login" (desatualizada desde v0.2.0), adicionado `BLC_RETENTION_DAYS` no `.env` de exemplo, nova seção de recuperação de desastre e checklist de segurança pós-instalação.
+
+### Corrigido
+- 9 classes CSS ausentes que causavam falha visual: `.login-wrap`, `.login-card`, `.button--full`, `.flash--error`, `.flash--info`, `.badge--error`, `.badge--running`, `.form__row`, `.form__group--check`.
+- Link "Editar" na lista de switches sem classe de botão (texto puro em meio a botões).
+- Formulário de filtro de execuções em `devices/detail.html` sem classes de form padrão.
+- Mensagem de erro em `error.html` genérica para todos os status; agora contextual por código (403, 404, 405, 422, 5xx).
+- Tamanho de arquivo na página Restore exibido em bytes brutos; agora em B/KB/MB via filtro Jinja2 `filesize`.
+
 ## [0.6.1] — 2026-11-10 — Redesenho do layout e Restore unificado
 
 ### Adicionado

@@ -58,7 +58,7 @@
       {% for v in versions %}
       <tr>
         <td>{{ v.collected_at.strftime('%H:%M:%S') }}</td>
-        <td class="muted">{{ v.size_bytes }} B</td>
+        <td class="muted">{{ v.size_bytes | filesize }}</td>
         <td><code>{{ v.sha256_raw[:8] }}…</code></td>
         <td>
           <a class="button button--ghost button--sm"

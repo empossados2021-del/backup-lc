@@ -2,7 +2,7 @@
 
 | Campo | Valor |
 | --- | --- |
-| Status | **Rascunho** — 2026-11-06 |
+| Status | **Implementada** — v0.7.0 (2026-11-10) |
 | Base | PRD v2.0 (F-13, N-03, N-06, N-07), ADR-007 |
 | Data | 2026-11-06 |
 | Depende de | E6 concluída; P-06 resolvida pelo cliente |
@@ -131,4 +131,11 @@ Nenhum pacote Python novo previsto. Se necessário, G-2 antes.
 
 ## 7. Evidências de verificação (fase D)
 
-_A preencher após implementação e execução do checklist de segurança._
+| Critério | Resultado | Como verificado |
+| --- | --- | --- |
+| E7-01 | Passou | `test_versoes_antigas_removidas`, `test_ultima_versao_preservada_mesmo_sendo_antiga`, `test_sem_versoes_antigas_nenhuma_remocao`, `test_retention_days_zero_desabilita_limpeza` — 222/222 testes passando |
+| E7-02 | Passou | `test_arquivo_nao_removido_com_dupla_referencia` — deduplicação reversa verificada |
+| E7-03 | Passou | `docs/runbooks/instalacao.md` atualizado; procedimentos A (instalação do zero) e B (atualização) completos |
+| E7-04 | Passou | `docs/runbooks/backup-dados.md` novo; procedimento de restauração documentado na seção 6 |
+| E7-05 | Passou | Checklist de segurança adicionado ao runbook (seção 8); `scripts/check.sh` passa (Ruff, mypy estrito, pytest) |
+| E7-06 | Passou | `scripts/check.sh` — 222 testes, 0 erros de lint, 0 erros de tipo |

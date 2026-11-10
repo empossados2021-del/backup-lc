@@ -4,7 +4,19 @@
 <section class="card error">
   <p class="error__code">{{ status }}</p>
   <h1>{{ title }}</h1>
+  {% if status == 403 %}
+  <p class="muted">Você não tem permissão para acessar este recurso.</p>
+  {% elif status == 404 %}
+  <p class="muted">A página ou recurso solicitado não foi encontrado.</p>
+  {% elif status == 405 %}
+  <p class="muted">Método HTTP não permitido para este endereço.</p>
+  {% elif status == 422 %}
+  <p class="muted">Os dados enviados são inválidos ou estão incompletos.</p>
+  {% elif status >= 500 %}
+  <p class="muted">Ocorreu um erro interno no servidor. Tente novamente em instantes.</p>
+  {% else %}
   <p class="muted">O endereço solicitado não está disponível.</p>
+  {% endif %}
   <p><a class="button" href="/">Voltar ao dashboard</a></p>
 </section>
 {% endblock %}

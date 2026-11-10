@@ -32,6 +32,7 @@ class Settings(BaseSettings):
     environment: Literal["production", "development"] = "production"
     max_concurrent: int = Field(default=5, ge=1, le=20)
     timezone: str = "America/Sao_Paulo"
+    retention_days: int = Field(default=365, ge=0)
 
 
 @dataclass(frozen=True)

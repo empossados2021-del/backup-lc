@@ -1,4 +1,4 @@
-# Runbook — Instalação, atualização e verificação
+# Runbook — Instalação, atualização e recuperação
 
 Público: quem administra o servidor de **produção**. Todos os comandos rodam no servidor, como root, em `/opt/backup-lc`.
 
@@ -8,77 +8,124 @@ Público: quem administra o servidor de **produção**. Todos os comandos rodam 
 
 ## 1. Pré-requisitos
 
-- Docker com Compose v2 ou superior; `git`; `python3` (usado por `scripts/init.sh`).
+- Docker com Compose v2 ou superior; `git`.
 - Imagem base `python:3.13-slim` disponível localmente (ou aprovação para baixá-la).
 - Acesso de leitura ao repositório (de preferência uma *deploy key* somente leitura).
 
 ## 2. Primeira instalação
 
 ```bash
-git clone git@github.com:empossados2021-del/backup-lc.git /opt/backup-lc   # [REDE]
+# [REDE] portão G-1
+git clone git@github.com:empossados2021-del/backup-lc.git /opt/backup-lc
 cd /opt/backup-lc
 git checkout vX.Y.Z            # sempre uma versão marcada, nunca um branch em desenvolvimento
-scripts/init.sh                # cria /var/lib/backup-lc e os segredos em /etc/backup-lc/secrets
-docker compose build           # [REDE] na primeira vez: baixa os pacotes travados no uv.lock
-docker compose up -d
-docker compose ps              # aguarde STATUS "healthy"
-curl -s http://127.0.0.1:8080/health/ready
+
+# Cria diretórios, usuário e segredos
+scripts/init.sh                # cria /var/lib/backup-lc (uid 10001) e /etc/backup-lc/secrets
 ```
 
 `scripts/init.sh` é idempotente e **nunca** sobrescreve segredos existentes.
 
-**Guarde uma cópia de `/etc/backup-lc/secrets/master_key` fora do servidor.** Sem ela, as credenciais cadastradas não podem ser decifradas (ADR-006).
+**Guarde uma cópia de `/etc/backup-lc/secrets/master_key` fora do servidor, em mídia separada.** Sem ela as credenciais cadastradas não podem ser decifradas (ADR-006).
 
-## 3. Acessar o dashboard
+```bash
+# [REDE] portão G-2 — baixa pacotes somente na primeira vez
+docker compose build
+
+docker compose up -d
+docker compose ps              # aguarde STATUS "healthy"
+curl -s http://127.0.0.1:8080/health/ready   # deve retornar {"status":"ok"}
+```
+
+Após subir, crie o primeiro usuário administrador:
+
+```bash
+docker compose exec app python -m backuplc create-admin
+```
+
+## 3. Variáveis de ambiente (`.env`)
+
+Crie `.env` na raiz do repositório a partir deste modelo:
+
+```env
+BLC_SESSION_SECRET_FILE=/etc/backup-lc/secrets/session_secret
+BLC_MASTER_KEY_FILE=/etc/backup-lc/secrets/master_key
+BLC_DATA_DIR=/var/lib/backup-lc
+BLC_ENVIRONMENT=production
+BLC_TIMEZONE=America/Sao_Paulo
+
+# Agendamento da coleta diária (cron no fuso BLC_TIMEZONE)
+# Exemplo: todos os dias às 02:00
+BLC_SCHEDULE_CRON=0 2 * * *
+
+# Retenção de backups em dias (0 = sem limite)
+BLC_RETENTION_DAYS=365
+
+# Porta interna do container (publicação definida no compose.yaml)
+BLC_PORT=8080
+```
+
+## 4. Acessar o dashboard
 
 O serviço é publicado em `0.0.0.0:8080` (ADR-012): abra `http://<servidor>:8080`.
 
-Atenção: ainda **sem TLS e sem login** (o login chega na E2). O Docker cria regras próprias de iptables, então firewalls como o ufw não bloqueiam essa porta.
+> O Docker cria regras próprias de iptables. Firewalls como ufw **não** bloqueiam esta porta automaticamente. Configure `DOCKER-USER` ou o firewall de rede para restringir o acesso antes de usar em produção.
 
-Para restringir ao próprio servidor, crie `.env` com `BLC_BIND=127.0.0.1` e rode `docker compose up -d`. O acesso passa a ser por túnel:
+Para restringir ao próprio servidor, adicione `BLC_BIND=127.0.0.1` ao `.env` e acesse via túnel SSH:
 
 ```bash
 ssh -L 8080:127.0.0.1:8080 <usuario>@<servidor>
 ```
 
-## 4. Atualizar para uma nova versão
+## 5. Atualizar para uma nova versão
 
-Antes: confirme que a versão foi verificada na VM de desenvolvimento (evidências na spec) e faça a cópia da seção 7.
+Antes: confirme que a versão foi verificada na VM de desenvolvimento (evidências na spec) e execute o procedimento de cópia de dados (`docs/runbooks/backup-dados.md`).
 
 ```bash
 cd /opt/backup-lc
 git status --short             # deve estar vazio: produção não tem alterações locais
 git fetch --tags               # [REDE] portão G-1
 git checkout vX.Y.Z
-docker compose up -d --build   # [REDE] baixa pacotes só se pyproject.toml/uv.lock mudarem (G-2)
+docker compose up -d --build   # [REDE] portão G-2 — baixa pacotes somente se uv.lock mudou
 docker compose ps              # aguarde "healthy"; migrações são aplicadas na subida
 curl -s http://127.0.0.1:8080/health/ready
 ```
 
-Voltar para a versão anterior: `git checkout <tag anterior>` e `docker compose up -d --build`. Se a nova versão aplicou migrações, primeiro reverta-as (abaixo) ou restaure a cópia do diretório de dados.
+Para reverter à versão anterior: `git checkout <tag anterior>` + `docker compose up -d --build`. Se a nova versão aplicou migrações de banco, reverta-as antes (abaixo) ou restaure a cópia dos dados.
 
-Reverter a última migração (somente com backup do diretório de dados):
+**Reverter a última migração de banco** (somente com cópia dos dados disponível):
 
 ```bash
 docker compose run --rm app migrate --down -1
 ```
 
-## 5. Verificação de qualidade
-
-Feita na VM de desenvolvimento ([`../DESENVOLVIMENTO.md`](../DESENVOLVIMENTO.md)), não em produção.
-
 ## 6. Diagnóstico rápido
 
-| Sintoma | Verificar |
+| Sintoma | O que verificar |
 | --- | --- |
-| Container reiniciando | `docker compose logs app` — erro `configuração inválida` cita a variável com problema |
-| `/health/ready` 503 | O JSON indica qual verificação falhou: `database`, `schema` ou `storage` |
+| Container reiniciando | `docker compose logs app` — `configuração inválida` cita a variável com problema |
+| `/health/ready` retorna 503 | JSON indica qual verificação falhou: `database`, `schema` ou `storage` |
 | `storage` falso | Dono de `/var/lib/backup-lc` deve ser `10001:10001`, permissão `0700` |
 | Segredo ilegível | Arquivos em `/etc/backup-lc/secrets` devem ser `10001:10001`, permissão `0400` |
+| Login não funciona | Verifique `BLC_SESSION_SECRET_FILE` e se o container está `healthy` |
+| Backups não são coletados | Verifique `BLC_SCHEDULE_CRON` e fuso `BLC_TIMEZONE` em Configurações |
+| Retenção não remove nada | Verifique `BLC_RETENTION_DAYS` (0 = desabilitada); job roda diariamente às 03:00 no fuso configurado |
 
-## 7. O que copiar para backup do próprio sistema
+## 7. Recuperação de desastre
 
-| Item | Caminho | Observação |
-| --- | --- | --- |
-| Dados (banco + configurações coletadas) | `/var/lib/backup-lc` | Pare o serviço ou copie com `sqlite3 .backup` |
-| Chave mestra | `/etc/backup-lc/secrets/master_key` | Guardar **separada** dos dados |
+1. Parar o container: `docker compose down`
+2. Restaurar `/var/lib/backup-lc` a partir da cópia (ver `docs/runbooks/backup-dados.md`)
+3. Restaurar `/etc/backup-lc/secrets/master_key` (cópia offline)
+4. Subir com a mesma tag que estava rodando: `docker compose up -d`
+5. Verificar: `curl -s http://127.0.0.1:8080/health/ready`
+
+## 8. Checklist de segurança pós-instalação
+
+| Item | Comando de verificação |
+| --- | --- |
+| Container sem root | `docker compose exec app id` → deve retornar `uid=10001` |
+| Sistema de arquivos do container read-only | `docker inspect backup-lc-app-1 --format '{{.HostConfig.ReadonlyRootfs}}'` → `true` |
+| Arquivos de backup com permissão `0600` | `find /var/lib/backup-lc/configs -type f -exec stat -c '%a %n' {} \;` |
+| Nenhum segredo em texto puro no banco | `sqlite3 /var/lib/backup-lc/backup-lc.db "SELECT encrypted_password FROM credentials LIMIT 1"` → ciphertext |
+| Headers HTTP de segurança | `curl -I http://localhost:8080/` → `X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff` |
+| Sem JavaScript nas páginas | `curl -s http://localhost:8080/ \| grep -c '<script'` → `0` |

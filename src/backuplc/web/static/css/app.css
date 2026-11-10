@@ -29,7 +29,7 @@
 
   --radius: 10px;
   --radius-sm: 6px;
-  --shadow: 0 1px 3px rgb(15 23 42/0.08), 0 1px 8px rgb(15 23 42/0.06);
+  --shadow: 0 1px 3px rgb(15 23 42/0.10), 0 2px 10px rgb(15 23 42/0.08);
   --font: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   --mono: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
   color-scheme: light;
@@ -226,15 +226,26 @@ a {
 
 .sidenav__link {
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
+  gap: 3px;
   width: 100%;
-  height: 44px;
+  height: 52px;
   color: var(--chrome-text);
   text-decoration: none;
   position: relative;
   border-left: 3px solid transparent;
   transition: color 0.15s;
+}
+
+.sidenav__link::after {
+  content: attr(title);
+  font-size: 0.6rem;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  color: inherit;
+  line-height: 1;
 }
 
 .sidenav__link:hover {
@@ -261,9 +272,14 @@ a {
 }
 
 .app-main--guest {
-  max-width: 420px;
-  margin-inline: auto;
-  padding: 60px 20px;
+  flex: 1;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.app-main--guest + .app-footer {
+  padding-left: 20px;
 }
 
 /* ── Brand SVG ── */
@@ -291,7 +307,12 @@ a {
   align-items: flex-start;
   gap: 16px;
   flex-wrap: wrap;
-  margin-bottom: 24px;
+  margin-bottom: 20px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px 20px;
+  box-shadow: var(--shadow);
 }
 
 .eyebrow {
@@ -316,6 +337,7 @@ a {
   border-radius: var(--radius);
   box-shadow: var(--shadow);
   padding: 20px;
+  overflow: hidden;
 }
 
 .card__head {
@@ -445,11 +467,12 @@ a {
 }
 
 .stat__value {
-  font-size: 2rem;
+  font-size: 2.5rem;
   font-weight: 700;
-  line-height: 1.2;
+  line-height: 1.1;
   margin-top: 4px;
   font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
 }
 
 .stat__hint {
@@ -464,13 +487,13 @@ a {
   display: inline-block;
 }
 
-.stat--ok,       .stat--healthy   { border-left-color: var(--ok); }
+.stat--ok,       .stat--healthy   { border-left-color: var(--ok);   background: color-mix(in srgb, var(--ok)   8%, var(--surface)); }
 .stat--ok .dot,  .stat--healthy .dot { background: var(--ok); }
-.stat--warn,     .stat--attention { border-left-color: var(--warn); }
+.stat--warn,     .stat--attention { border-left-color: var(--warn);  background: color-mix(in srgb, var(--warn)  8%, var(--surface)); }
 .stat--warn .dot,.stat--attention .dot { background: var(--warn); }
-.stat--crit,     .stat--critical  { border-left-color: var(--crit); }
+.stat--crit,     .stat--critical  { border-left-color: var(--crit);  background: color-mix(in srgb, var(--crit)  8%, var(--surface)); }
 .stat--crit .dot,.stat--critical .dot { background: var(--crit); }
-.stat--idle,     .stat--inactive  { border-left-color: var(--idle); }
+.stat--idle,     .stat--inactive  { border-left-color: var(--idle);  background: color-mix(in srgb, var(--idle)  5%, var(--surface)); }
 .stat--idle .dot,.stat--inactive .dot { background: var(--idle); }
 
 .grid-2 {
@@ -491,10 +514,12 @@ a {
   white-space: nowrap;
 }
 
-.badge--ok   { color: var(--ok);   background: var(--ok-bg); }
-.badge--warn { color: var(--warn); background: var(--warn-bg); }
-.badge--crit { color: var(--crit); background: var(--crit-bg); }
-.badge--idle { color: var(--idle); background: var(--idle-bg); }
+.badge--ok      { color: var(--ok);     background: var(--ok-bg); }
+.badge--warn    { color: var(--warn);   background: var(--warn-bg); }
+.badge--crit,
+.badge--error   { color: var(--crit);   background: var(--crit-bg); }
+.badge--idle    { color: var(--idle);   background: var(--idle-bg); }
+.badge--running { color: var(--accent); background: color-mix(in srgb, var(--accent) 12%, transparent); }
 
 /* ── Listas de verificação ── */
 .checks,
@@ -542,16 +567,25 @@ a {
   border: none;
   cursor: pointer;
   font-size: 0.9rem;
+  box-shadow: 0 1px 3px color-mix(in srgb, var(--accent) 35%, transparent);
+  transition: filter 0.1s, box-shadow 0.1s;
+}
+
+.button:not(.button--ghost):not(.button--danger):hover {
+  filter: brightness(1.1);
+  box-shadow: 0 2px 6px color-mix(in srgb, var(--accent) 40%, transparent);
 }
 
 .button--ghost {
   background: transparent;
   color: var(--text);
   border: 1px solid var(--border);
+  box-shadow: none;
 }
 
 .button--ghost:hover {
   background: var(--surface-2);
+  border-color: color-mix(in srgb, var(--border) 70%, var(--accent));
 }
 
 .button--danger {
@@ -564,6 +598,12 @@ a {
   font-size: 0.82rem;
 }
 
+.button--full {
+  display: block;
+  width: 100%;
+  text-align: center;
+}
+
 /* ── Tabelas ── */
 .table {
   width: 100%;
@@ -573,7 +613,7 @@ a {
 
 .table th,
 .table td {
-  padding: 10px 12px;
+  padding: 8px 12px;
   text-align: left;
   border-bottom: 1px solid var(--border);
 }
@@ -581,9 +621,13 @@ a {
 .table th {
   font-weight: 600;
   color: var(--muted);
-  font-size: 0.8rem;
+  font-size: 0.75rem;
   text-transform: uppercase;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.06em;
+  background: var(--surface-2);
+  border-bottom: 2px solid var(--border);
+  position: sticky;
+  top: 0;
 }
 
 .table tbody tr:last-child td {
@@ -644,6 +688,37 @@ a {
   margin-top: 20px;
 }
 
+.form__row {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.form__row .form__group {
+  flex: 1;
+  min-width: 100px;
+  margin-bottom: 0;
+}
+
+.form__group--check {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.form__group--check input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+
+.form__group--check label {
+  font-weight: 600;
+  font-size: 0.875rem;
+  cursor: pointer;
+}
+
 /* ── Flash ── */
 .flash {
   padding: 10px 16px;
@@ -652,8 +727,117 @@ a {
   font-size: 0.9rem;
 }
 
-.flash--ok   { background: var(--ok-bg);   color: var(--ok); }
-.flash--warn { background: var(--warn-bg); color: var(--warn); }
+.flash--ok    { background: var(--ok-bg);   color: var(--ok); }
+.flash--warn  { background: var(--warn-bg); color: var(--warn); }
+.flash--error { background: var(--crit-bg); color: var(--crit); }
+.flash--info  { background: color-mix(in srgb, var(--accent) 10%, transparent); color: var(--accent); }
+
+/* ── Login split-screen ── */
+.login-split {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  flex: 1;
+  min-height: 480px;
+}
+
+.login-split__brand {
+  background: var(--chrome-bg);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 48px 44px;
+  gap: 0;
+  border-right: 1px solid var(--chrome-border);
+}
+
+.login-split__logo {
+  width: 52px;
+  height: 52px;
+  margin-bottom: 20px;
+}
+
+.login-split__name {
+  margin: 0 0 6px;
+  font-size: 1.75rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: #ffffff;
+}
+
+.login-split__name strong {
+  color: #93c5fd;
+}
+
+.login-split__tagline {
+  margin: 0 0 36px;
+  color: var(--chrome-text);
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+
+.login-split__features {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.login-split__features li {
+  color: var(--chrome-text);
+  font-size: 0.875rem;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.login-split__features li::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--chrome-active);
+  flex: none;
+}
+
+.login-split__pane {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 44px;
+  background: var(--surface);
+}
+
+.login-split__form-wrap {
+  width: 100%;
+  max-width: 320px;
+}
+
+.login-split__heading {
+  margin: 0 0 6px;
+  font-size: 1.4rem;
+}
+
+.login-split__sub {
+  margin: 0 0 24px;
+  color: var(--muted);
+  font-size: 0.875rem;
+}
+
+/* ── Confirm delete / wraps ── */
+.login-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  padding: 40px 20px;
+}
+
+.login-card {
+  width: 100%;
+  max-width: 400px;
+}
 
 /* ── Paginação ── */
 .pagination {
@@ -854,6 +1038,7 @@ a {
   }
 
   .sidenav__link {
+    flex-direction: row;
     width: auto;
     height: 36px;
     padding: 0 10px;
@@ -869,9 +1054,7 @@ a {
   }
 
   .sidenav__link::after {
-    content: attr(title);
     font-size: 0.78rem;
-    font-weight: 500;
   }
 
   .app-main {
@@ -880,6 +1063,22 @@ a {
 
   .app-footer {
     padding-left: 20px;
+  }
+
+  .login-split {
+    grid-template-columns: 1fr;
+  }
+
+  .login-split__brand {
+    padding: 28px 24px;
+  }
+
+  .login-split__features {
+    display: none;
+  }
+
+  .login-split__pane {
+    padding: 32px 24px;
   }
 }
 

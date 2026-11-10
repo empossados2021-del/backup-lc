@@ -63,7 +63,7 @@
         <td class="actions">
           <a class="button button--ghost button--sm" href="/restore?device={{ d.id }}">Restore</a>
           {% if request.state.user.role == 'admin' %}
-          <a href="/devices/{{ d.id }}/edit">Editar</a>
+          <a class="button button--ghost button--sm" href="/devices/{{ d.id }}/edit">Editar</a>
           <a class="button button--ghost button--danger button--sm" href="/devices/{{ d.id }}/delete">Excluir</a>
           {% endif %}
         </td>

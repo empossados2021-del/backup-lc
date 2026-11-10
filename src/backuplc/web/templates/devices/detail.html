@@ -92,16 +92,14 @@
 <div class="card">
   <div class="card__head">
     <h2>Histórico de execuções</h2>
-    <form method="get" action="/devices/{{ device.id }}">
-      <label>Filtrar por status:
-        <select name="status">
-          <option value="">Todos</option>
-          {% for s in execution_statuses %}
-          <option value="{{ s }}" {% if status_filter == s %}selected{% endif %}>{{ s }}</option>
-          {% endfor %}
-        </select>
-      </label>
-      <button class="button button--ghost" type="submit">Filtrar</button>
+    <form method="get" action="/devices/{{ device.id }}" class="actions">
+      <select class="form__input" name="status">
+        <option value="">Todos os status</option>
+        {% for s in execution_statuses %}
+        <option value="{{ s }}" {% if status_filter == s %}selected{% endif %}>{{ s }}</option>
+        {% endfor %}
+      </select>
+      <button class="button button--ghost button--sm" type="submit">Filtrar</button>
     </form>
   </div>
   {% if executions %}
